@@ -210,8 +210,8 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   private static final byte[] ALLOW_CANCEL_UNFREEZE_V2 = "ALLOW_CANCEL_UNFREEZE_V2"
       .getBytes();
 
-  private static final byte[] ALLOW_OPTIMIZE_LOCK_DELEGATE_RESOURCE =
-      "ALLOW_OPTIMIZE_LOCK_DELEGATE_RESOURCE".getBytes();
+  private static final byte[] MAX_NUMBER_OF_LOCK_PERIOD =
+      "MAX_NUMBER_OF_LOCK_PERIOD".getBytes();
 
   @Autowired
   private DynamicPropertiesStore(@Value("properties") String dbName) {
@@ -2799,20 +2799,20 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
     return getAllowCancelUnfreezeV2() == 1L && getUnfreezeDelayDays() > 0;
   }
 
-  public void saveAllowOptimizeLockDelegateResource(long allowOptimizeLockDelegateResource) {
-    this.put(DynamicPropertiesStore.ALLOW_OPTIMIZE_LOCK_DELEGATE_RESOURCE,
-        new BytesCapsule(ByteArray.fromLong(allowOptimizeLockDelegateResource)));
+  public void saveMaxNumberOfLockPeriod(long maxNumberOfLockPeriod) {
+    this.put(DynamicPropertiesStore.MAX_NUMBER_OF_LOCK_PERIOD,
+        new BytesCapsule(ByteArray.fromLong(maxNumberOfLockPeriod)));
   }
 
-  public long getAllowOptimizeLockDelegateResource() {
-    return Optional.ofNullable(getUnchecked(ALLOW_OPTIMIZE_LOCK_DELEGATE_RESOURCE))
+  public long getMaxNumberOfLockPeriod() {
+    return Optional.ofNullable(getUnchecked(MAX_NUMBER_OF_LOCK_PERIOD))
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
-        .orElse(CommonParameter.getInstance().getAllowOptimizeLockDelegateResource());
+        .orElse(CommonParameter.getInstance().getMaxNumberOfLockPeriod());
   }
 
-  public boolean supportAllowOptimizeLockDelegateResource() {
-    return getAllowOptimizeLockDelegateResource() == 1L && getUnfreezeDelayDays() > 0;
+  public boolean supportMaxNumberOfLockPeriod() {
+    return getMaxNumberOfLockPeriod() > 0 && getUnfreezeDelayDays() > 0;
   }
 
   private static class DynamicResourceProperties {

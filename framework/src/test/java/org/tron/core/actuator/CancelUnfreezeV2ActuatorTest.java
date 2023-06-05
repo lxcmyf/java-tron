@@ -10,6 +10,8 @@ import static org.tron.protos.contract.Common.ResourceCode.ENERGY;
 import com.beust.jcommander.internal.Lists;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -82,6 +84,32 @@ public class CancelUnfreezeV2ActuatorTest extends BaseTest {
       AccountCapsule owner = dbManager.getAccountStore()
           .get(ByteArray.fromHexString(OWNER_ADDRESS));
       assertEquals(2000000L, ret.getInstance().getWithdrawExpireAmount());
+      assertEquals(2, owner.getUnfrozenV2List().size());
+    } catch (ContractValidateException | ContractExeException e) {
+      fail();
+    }
+  }
+
+  @Test
+  public void testCancelSameUnfreezeV2() {
+    long now = System.currentTimeMillis();
+    AccountCapsule accountCapsule = dbManager.getAccountStore()
+        .get(ByteArray.fromHexString(OWNER_ADDRESS));
+    accountCapsule.addUnfrozenV2List(BANDWIDTH, 1000000L, now + 14 * 24 * 3600 * 1000);
+    accountCapsule.addUnfrozenV2List(BANDWIDTH, 1000000L, now + 14 * 24 * 3600 * 1000);
+    accountCapsule.addUnfrozenV2List(BANDWIDTH, 1000000L, now + 14 * 24 * 3600 * 1000);
+    dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
+    CancelUnfreezeV2Actuator actuator = new CancelUnfreezeV2Actuator();
+    actuator.setChainBaseManager(dbManager.getChainBaseManager())
+        .setAny(getOneIndexCancelUnfreezeV2Contract());
+    TransactionResultCapsule ret = new TransactionResultCapsule();
+    try {
+      actuator.validate();
+      actuator.execute(ret);
+      assertEquals(SUCESS, ret.getInstance().getRet());
+      AccountCapsule owner = dbManager.getAccountStore()
+          .get(ByteArray.fromHexString(OWNER_ADDRESS));
+      assertEquals(1000000L, ret.getInstance().getCancelUnfreezeV2Amount());
       assertEquals(2, owner.getUnfrozenV2List().size());
     } catch (ContractValidateException | ContractExeException e) {
       fail();
@@ -239,6 +267,27 @@ public class CancelUnfreezeV2ActuatorTest extends BaseTest {
   }
 
   @Test
+  public void testDuplicatedIndex() {
+    dbManager.getDynamicPropertiesStore().saveAllowCancelUnfreezeV2(1);
+    long now = System.currentTimeMillis();
+    AccountCapsule accountCapsule = dbManager.getAccountStore()
+        .get(ByteArray.fromHexString(OWNER_ADDRESS));
+    accountCapsule.addUnfrozenV2List(BANDWIDTH, 1000000L, now + 14 * 24 * 3600 * 1000);
+    accountCapsule.addUnfrozenV2List(ENERGY, 2000000L, -1);
+    accountCapsule.addUnfrozenV2List(BANDWIDTH, 3000000L, now + 14 * 24 * 3600 * 1000);
+    accountCapsule.addUnfrozenV2List(ENERGY, 4000000L, now + 14 * 24 * 3600 * 1000);
+    accountCapsule.addUnfrozenV2List(BANDWIDTH, 4000000L, 100);
+    accountCapsule.addUnfrozenV2List(ENERGY, 4000000L, 100);
+    dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
+
+    CancelUnfreezeV2Actuator actuator = new CancelUnfreezeV2Actuator();
+    actuator.setChainBaseManager(dbManager.getChainBaseManager())
+        .setAny(getDuplicatedIndexCancelUnfreezeV2Contract());
+    assertThrows("The element[1,2] in the index list is duplicated",
+        ContractValidateException.class, actuator::validate);
+  }
+
+  @Test
   public void testErrorContract() {
     dbManager.getDynamicPropertiesStore().saveAllowCancelUnfreezeV2(1);
     CancelUnfreezeV2Actuator actuator = new CancelUnfreezeV2Actuator();
@@ -256,6 +305,15 @@ public class CancelUnfreezeV2ActuatorTest extends BaseTest {
     );
   }
 
+  private Any getOneIndexCancelUnfreezeV2Contract() {
+    List<Integer> list = new ArrayList<>();
+    list.add(0);
+    return Any.pack(BalanceContract.CancelUnfreezeV2Contract.newBuilder()
+        .addAllIndex(list)
+        .setOwnerAddress(ByteString.copyFrom(ByteArray.fromHexString(OWNER_ADDRESS))).build()
+    );
+  }
+
   private Any getCancelAllUnfreezeV2Contract() {
     return Any.pack(BalanceContract.CancelUnfreezeV2Contract.newBuilder()
         .setOwnerAddress(ByteString.copyFrom(ByteArray.fromHexString(OWNER_ADDRESS))).build()
@@ -265,6 +323,13 @@ public class CancelUnfreezeV2ActuatorTest extends BaseTest {
   private Any getWrongIndexSizeCancelUnfreezeV2Contract() {
     return Any.pack(BalanceContract.CancelUnfreezeV2Contract.newBuilder()
         .addAllIndex(Lists.newArrayList(0, 1, 2, 1, 3, 2, 4))
+        .setOwnerAddress(ByteString.copyFrom(ByteArray.fromHexString(OWNER_ADDRESS))).build()
+    );
+  }
+
+  private Any getDuplicatedIndexCancelUnfreezeV2Contract() {
+    return Any.pack(BalanceContract.CancelUnfreezeV2Contract.newBuilder()
+        .addAllIndex(Lists.newArrayList(0, 1, 2, 1, 3, 2))
         .setOwnerAddress(ByteString.copyFrom(ByteArray.fromHexString(OWNER_ADDRESS))).build()
     );
   }

@@ -120,7 +120,7 @@ public class DelegateResourceActuatorTest extends BaseTest {
             .build());
   }
 
-  private Any getOptimizeLockedDelegateContractForBandwidth(long unfreezeBalance, long lockPeriod) {
+  private Any getMaxNumberOfLockPeriodContractForBandwidth(long unfreezeBalance, long lockPeriod) {
     return Any.pack(DelegateResourceContract.newBuilder()
         .setOwnerAddress(ByteString.copyFrom(ByteArray.fromHexString(OWNER_ADDRESS)))
         .setReceiverAddress(ByteString.copyFrom(ByteArray.fromHexString(RECEIVER_ADDRESS)))
@@ -131,7 +131,7 @@ public class DelegateResourceActuatorTest extends BaseTest {
         .build());
   }
 
-  private Any getOptimizeLockedDelegateContractForEnergy(long unfreezeBalance, long lockPeriod) {
+  private Any getMaxNumberOfLockPeriodContractForEnergy(long unfreezeBalance, long lockPeriod) {
     return Any.pack(DelegateResourceContract.newBuilder()
         .setOwnerAddress(ByteString.copyFrom(ByteArray.fromHexString(OWNER_ADDRESS)))
         .setReceiverAddress(ByteString.copyFrom(ByteArray.fromHexString(RECEIVER_ADDRESS)))
@@ -434,26 +434,27 @@ public class DelegateResourceActuatorTest extends BaseTest {
   }
 
   @Test
-  public void testOptimizeLockedDelegateResourceForBandwidthWrongLockPeriod1() {
-    dbManager.getDynamicPropertiesStore().saveAllowOptimizeLockDelegateResource(1);
+  public void testMaxNumberOfLockPeriodForBandwidthWrongLockPeriod1() {
+    dbManager.getDynamicPropertiesStore().saveMaxNumberOfLockPeriod(1);
     freezeBandwidthForOwner();
     long delegateBalance = 1_000_000_000L;
     DelegateResourceActuator actuator = new DelegateResourceActuator();
     actuator.setChainBaseManager(dbManager.getChainBaseManager()).setAny(
-        getOptimizeLockedDelegateContractForBandwidth(
+        getMaxNumberOfLockPeriodContractForBandwidth(
             delegateBalance, 370 * 24 * 3600));
     assertThrows("The lock period of delegate resources cannot exceed 1 year!",
         ContractValidateException.class, actuator::validate);
+    dbManager.getDynamicPropertiesStore().saveMaxNumberOfLockPeriod(0);
   }
 
   @Test
-  public void testOptimizeLockedDelegateResourceForBandwidthWrongLockPeriod2() {
-    dbManager.getDynamicPropertiesStore().saveAllowOptimizeLockDelegateResource(1);
+  public void testMaxNumberOfLockPeriodForBandwidthWrongLockPeriod2() {
+    dbManager.getDynamicPropertiesStore().saveMaxNumberOfLockPeriod(864000L);
     freezeBandwidthForOwner();
     long delegateBalance = 1_000_000_000L;
     DelegateResourceActuator actuator = new DelegateResourceActuator();
     actuator.setChainBaseManager(dbManager.getChainBaseManager()).setAny(
-        getOptimizeLockedDelegateContractForBandwidth(
+        getMaxNumberOfLockPeriodContractForBandwidth(
             delegateBalance, 60));
 
     TransactionResultCapsule ret = new TransactionResultCapsule();
@@ -467,22 +468,23 @@ public class DelegateResourceActuatorTest extends BaseTest {
 
     DelegateResourceActuator actuator1 = new DelegateResourceActuator();
     actuator1.setChainBaseManager(dbManager.getChainBaseManager()).setAny(
-        getOptimizeLockedDelegateContractForBandwidth(
+        getMaxNumberOfLockPeriodContractForBandwidth(
             delegateBalance, 30));
     assertThrows("The lock period for bandwidth this time cannot be less than the remaining"
             + " time[60000s] of the last lock period for bandwidth!",
         ContractValidateException.class, actuator1::validate);
+    dbManager.getDynamicPropertiesStore().saveMaxNumberOfLockPeriod(0);
   }
 
   @Test
-  public void testOptimizeLockedDelegateResourceForBandwidth() {
-    dbManager.getDynamicPropertiesStore().saveAllowOptimizeLockDelegateResource(1);
+  public void testMaxNumberOfLockPeriodForBandwidth() {
+    dbManager.getDynamicPropertiesStore().saveMaxNumberOfLockPeriod(864000L);
     dbManager.getDynamicPropertiesStore().saveLatestBlockHeaderTimestamp(50_000L);
     freezeBandwidthForOwner();
     long delegateBalance = 1_000_000_000L;
     DelegateResourceActuator actuator = new DelegateResourceActuator();
     actuator.setChainBaseManager(dbManager.getChainBaseManager()).setAny(
-        getOptimizeLockedDelegateContractForBandwidth(
+        getMaxNumberOfLockPeriodContractForBandwidth(
             delegateBalance, 60));
 
     TransactionResultCapsule ret = new TransactionResultCapsule();
@@ -496,7 +498,7 @@ public class DelegateResourceActuatorTest extends BaseTest {
 
     DelegateResourceActuator actuator1 = new DelegateResourceActuator();
     actuator1.setChainBaseManager(dbManager.getChainBaseManager()).setAny(
-        getOptimizeLockedDelegateContractForBandwidth(
+        getMaxNumberOfLockPeriodContractForBandwidth(
             delegateBalance, 60));
 
     TransactionResultCapsule ret1 = new TransactionResultCapsule();
@@ -517,14 +519,14 @@ public class DelegateResourceActuatorTest extends BaseTest {
   }
 
   @Test
-  public void testOptimizeLockedDelegateResourceForEnergy() {
-    dbManager.getDynamicPropertiesStore().saveAllowOptimizeLockDelegateResource(1);
+  public void testMaxNumberOfLockPeriodForEnergy() {
+    dbManager.getDynamicPropertiesStore().saveMaxNumberOfLockPeriod(864000L);
     dbManager.getDynamicPropertiesStore().saveLatestBlockHeaderTimestamp(50_000L);
     freezeCpuForOwner();
     long delegateBalance = 1_000_000_000L;
     DelegateResourceActuator actuator = new DelegateResourceActuator();
     actuator.setChainBaseManager(dbManager.getChainBaseManager()).setAny(
-        getOptimizeLockedDelegateContractForEnergy(
+        getMaxNumberOfLockPeriodContractForEnergy(
             delegateBalance, 60));
 
     TransactionResultCapsule ret = new TransactionResultCapsule();
@@ -538,7 +540,7 @@ public class DelegateResourceActuatorTest extends BaseTest {
 
     DelegateResourceActuator actuator1 = new DelegateResourceActuator();
     actuator1.setChainBaseManager(dbManager.getChainBaseManager()).setAny(
-        getOptimizeLockedDelegateContractForEnergy(
+        getMaxNumberOfLockPeriodContractForEnergy(
             delegateBalance, 60));
 
     TransactionResultCapsule ret1 = new TransactionResultCapsule();
@@ -557,13 +559,13 @@ public class DelegateResourceActuatorTest extends BaseTest {
   }
 
   @Test
-  public void testOptimizeLockedDelegateResourceForEnergyWrongLockPeriod2() {
-    dbManager.getDynamicPropertiesStore().saveAllowOptimizeLockDelegateResource(1);
+  public void testMaxNumberOfLockPeriodForEnergyWrongLockPeriod2() {
+    dbManager.getDynamicPropertiesStore().saveMaxNumberOfLockPeriod(864000L);
     freezeCpuForOwner();
     long delegateBalance = 1_000_000_000L;
     DelegateResourceActuator actuator = new DelegateResourceActuator();
     actuator.setChainBaseManager(dbManager.getChainBaseManager()).setAny(
-        getOptimizeLockedDelegateContractForEnergy(
+        getMaxNumberOfLockPeriodContractForEnergy(
             delegateBalance, 60));
 
     TransactionResultCapsule ret = new TransactionResultCapsule();
@@ -577,7 +579,7 @@ public class DelegateResourceActuatorTest extends BaseTest {
 
     DelegateResourceActuator actuator1 = new DelegateResourceActuator();
     actuator1.setChainBaseManager(dbManager.getChainBaseManager()).setAny(
-        getOptimizeLockedDelegateContractForEnergy(
+        getMaxNumberOfLockPeriodContractForEnergy(
             delegateBalance, 30));
     assertThrows("The lock period for energy this time cannot be less than the remaining"
             + " time[60000s] of the last lock period for energy!",
@@ -774,6 +776,34 @@ public class DelegateResourceActuatorTest extends BaseTest {
 
     actuatorTest.setNullDBManagerMsg("No account store or dynamic store!");
     actuatorTest.nullDBManger();
+  }
+
+  @Test
+  public void testSupportDelegateResource() {
+    dbManager.getDynamicPropertiesStore().saveAllowDelegateResource(0);
+    DelegateResourceActuator actuator = new DelegateResourceActuator();
+    actuator.setChainBaseManager(dbManager.getChainBaseManager())
+        .setAny(getDelegateContractForBandwidth(
+                OWNER_ADDRESS,
+                RECEIVER_ADDRESS,
+                1_000_000_000L));
+    assertThrows(
+        "No support for resource delegate",
+        ContractValidateException.class, actuator::validate);
+  }
+
+  @Test
+  public void testSupportUnfreezeDelay() {
+    dbManager.getDynamicPropertiesStore().saveUnfreezeDelayDays(0);
+    DelegateResourceActuator actuator = new DelegateResourceActuator();
+    actuator.setChainBaseManager(dbManager.getChainBaseManager())
+        .setAny(getDelegateContractForBandwidth(
+            OWNER_ADDRESS,
+            RECEIVER_ADDRESS,
+            1_000_000_000L));
+    assertThrows(
+        "Not support Delegate resource transaction, need to be opened by the committee",
+        ContractValidateException.class, actuator::validate);
   }
 
   @Test

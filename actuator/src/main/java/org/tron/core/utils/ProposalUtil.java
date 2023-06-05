@@ -708,19 +708,20 @@ public class ProposalUtil {
         }
         break;
       }
-      case ALLOW_OPTIMIZE_LOCK_DELEGATE_RESOURCE: {
+      case MAX_NUMBER_OF_LOCK_PERIOD: {
         if (!forkController.pass(ForkBlockVersionEnum.VERSION_4_7_2)) {
           throw new ContractValidateException(
-              "Bad chain parameter id [ALLOW_OPTIMIZE_LOCK_DELEGATE_RESOURCE]");
+              "Bad chain parameter id [MAX_NUMBER_OF_LOCK_PERIOD]");
         }
-        if (value != 1) {
+        if (value < 1) {
           throw new ContractValidateException(
-              "This value[ALLOW_OPTIMIZE_LOCK_DELEGATE_RESOURCE] is only allowed to be 1");
+              "This value[MAX_NUMBER_OF_LOCK_PERIOD] is only allowed to be "
+                  + "greater than or equal to 1");
         }
         if (dynamicPropertiesStore.getUnfreezeDelayDays() == 0) {
           throw new ContractValidateException(
               "[UNFREEZE_DELAY_DAYS] proposal must be approved "
-                  + "before [ALLOW_OPTIMIZE_LOCK_DELEGATE_RESOURCE] can be proposed");
+                  + "before [MAX_NUMBER_OF_LOCK_PERIOD] can be proposed");
         }
         break;
       }
@@ -799,7 +800,7 @@ public class ProposalUtil {
     DYNAMIC_ENERGY_MAX_FACTOR(75), // 0, [0, 100_000]
     ALLOW_TVM_SHANGHAI(76), // 0, 1
     ALLOW_CANCEL_UNFREEZE_V2(77), // 0, 1
-    ALLOW_OPTIMIZE_LOCK_DELEGATE_RESOURCE(78); // 0, 1
+    MAX_NUMBER_OF_LOCK_PERIOD(78); // 0, 1
 
     private long code;
 

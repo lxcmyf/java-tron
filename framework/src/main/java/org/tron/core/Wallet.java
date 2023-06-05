@@ -1331,8 +1331,8 @@ public class Wallet {
         .build());
 
     builder.addChainParameter(Protocol.ChainParameters.ChainParameter.newBuilder()
-        .setKey("getAllowOptimizeLockDelegateResource")
-        .setValue(dbManager.getDynamicPropertiesStore().getAllowOptimizeLockDelegateResource())
+        .setKey("getMaxNumberOfLockPeriod")
+        .setValue(dbManager.getDynamicPropertiesStore().getMaxNumberOfLockPeriod())
         .build());
 
     return builder.build();

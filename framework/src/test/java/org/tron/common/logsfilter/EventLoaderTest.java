@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
+import org.tron.common.logsfilter.trigger.BlockLogTrigger;
 
 public class EventLoaderTest {
 
@@ -24,8 +25,22 @@ public class EventLoaderTest {
 
     config.setTriggerConfigList(triggerConfigList);
 
-    Assert.assertEquals(true, EventPluginLoader.getInstance().start(config));
+    Assert.assertTrue(EventPluginLoader.getInstance().start(config));
 
     EventPluginLoader.getInstance().stopPlugin();
+  }
+
+  @Test
+  public void testBlockLogTrigger() {
+    BlockLogTrigger blt = new BlockLogTrigger();
+    blt.setBlockHash(blt.getBlockHash());
+    blt.setBlockNumber(blt.getBlockNumber());
+    blt.setTransactionSize(blt.getTransactionSize());
+    blt.setLatestSolidifiedBlockNumber(blt.getLatestSolidifiedBlockNumber());
+    blt.setTriggerName(blt.getTriggerName());
+    blt.setTimeStamp(blt.getTimeStamp());
+    blt.setTransactionList(blt.getTransactionList());
+    Assert.assertNotNull(blt.toString());
+
   }
 }

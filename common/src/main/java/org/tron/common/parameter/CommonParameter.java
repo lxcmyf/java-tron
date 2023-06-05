@@ -657,7 +657,7 @@ public class CommonParameter {
 
   @Getter
   @Setter
-  public long allowOptimizeLockDelegateResource;
+  public long maxNumberOfLockPeriod;
 
   private static double calcMaxTimeRatio() {
     //return max(2.0, min(5.0, 5 * 4.0 / max(Runtime.getRuntime().availableProcessors(), 1)));

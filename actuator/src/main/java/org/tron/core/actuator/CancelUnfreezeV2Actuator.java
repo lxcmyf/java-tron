@@ -8,6 +8,7 @@ import static org.tron.protos.contract.Common.ResourceCode.ENERGY;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -65,7 +66,7 @@ public class CancelUnfreezeV2Actuator extends AbstractActuator {
     AtomicLong atomicCancelBalance = new AtomicLong(0L);
     Triple<AtomicLong, AtomicLong, AtomicLong> triple =
         Triple.of(new AtomicLong(0L), new AtomicLong(0L), new AtomicLong(0L));
-    List<UnFreezeV2> newUnFreezeV2List = null;
+    List<UnFreezeV2> newUnFreezeV2List = new ArrayList<>();
     if (indexList.isEmpty()) {
       for (UnFreezeV2 unFreezeV2 : unfrozenV2List) {
         updateAndCalculate(triple, ownerCapsule, now, atomicWithdrawExpireBalance,
@@ -77,8 +78,11 @@ public class CancelUnfreezeV2Actuator extends AbstractActuator {
         updateAndCalculate(triple, ownerCapsule, now, atomicWithdrawExpireBalance,
             atomicCancelBalance, unFreezeV2);
       });
-      newUnFreezeV2List = unfrozenV2List.stream()
-          .filter(o -> !indexList.contains(unfrozenV2List.indexOf(o))).collect(Collectors.toList());
+      for (int i = 0; i < unfrozenV2List.size(); i++) {
+        if (!indexList.contains(i)) {
+          newUnFreezeV2List.add(unfrozenV2List.get(i));
+        }
+      }
     }
     ownerCapsule.clearUnfrozenV2();
     ownerCapsule.addAllUnfrozenV2(newUnFreezeV2List);
@@ -169,19 +173,21 @@ public class CancelUnfreezeV2Actuator extends AbstractActuator {
               + unfrozenV2List.size() + "] of unfreezeV2!");
     }
 
-    for (Integer i : indexList) {
-      int maxIndex = unfrozenV2List.size() - 1;
-      if (i < 0 || i > maxIndex) {
-        throw new ContractValidateException(
-            "The input index[" + i + "] cannot be less than 0 and cannot be "
-                + "greater than the maximum index[" + maxIndex + "] of unfreezeV2!");
-      }
+    int maxIndex = unfrozenV2List.size() - 1;
+    List<Integer> wIdx = indexList.stream().filter(i -> i < 0 || i > maxIndex).distinct()
+        .collect(Collectors.toList());
+    if (CollectionUtils.isNotEmpty(wIdx)) {
+      throw new ContractValidateException("The element" + wIdx + " in the index list cannot be less"
+          + " than 0 and cannot be greater than the maximum index " + maxIndex + " of unfreezeV2!");
     }
+
     Set<Integer> set = new HashSet<>();
-    List<Integer> dps = indexList.stream().filter(n -> !set.add(n)).collect(Collectors.toList());
+    List<Integer> dps = indexList.stream().filter(n -> !set.add(n)).distinct()
+        .collect(Collectors.toList());
     if (CollectionUtils.isNotEmpty(dps)) {
       throw new ContractValidateException("The element" + dps + " in the index list is duplicated");
     }
+
     return true;
   }
 

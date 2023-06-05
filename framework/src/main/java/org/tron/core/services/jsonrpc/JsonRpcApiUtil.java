@@ -216,6 +216,7 @@ public class JsonRpcApiUtil {
         case WithdrawBalanceContract:
         case WithdrawExpireUnfreezeContract:
         case UnfreezeBalanceV2Contract:
+        case CancelUnfreezeV2Contract:
           TransactionInfo transactionInfo = wallet
               .getTransactionInfoById(ByteString.copyFrom(ByteArray.fromHexString(hash)));
           amount = getAmountFromTransactionInfo(hash, contract.getType(), transactionInfo);
@@ -292,6 +293,7 @@ public class JsonRpcApiUtil {
         case WithdrawBalanceContract:
         case WithdrawExpireUnfreezeContract:
         case UnfreezeBalanceV2Contract:
+        case CancelUnfreezeV2Contract:
           amount = getAmountFromTransactionInfo(hash, contract.getType(), transactionInfo);
           break;
         case UnfreezeAssetContract:
