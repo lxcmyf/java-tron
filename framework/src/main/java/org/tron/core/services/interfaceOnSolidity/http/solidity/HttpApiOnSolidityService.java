@@ -1,5 +1,7 @@
 package org.tron.core.services.interfaceOnSolidity.http.solidity;
 
+import static org.tron.common.parameter.CommonParameter.getInstance;
+
 import java.util.EnumSet;
 import javax.servlet.DispatcherType;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +13,6 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.tron.common.application.Service;
 import org.tron.common.parameter.CommonParameter;
-import org.tron.core.config.args.Args;
 import org.tron.core.services.filter.HttpApiAccessFilter;
 import org.tron.core.services.filter.LiteFnQueryHttpFilter;
 import org.tron.core.services.interfaceOnSolidity.http.EstimateEnergyOnSolidityServlet;
@@ -60,11 +61,10 @@ import org.tron.core.services.interfaceOnSolidity.http.ScanShieldedTRC20NotesByI
 import org.tron.core.services.interfaceOnSolidity.http.ScanShieldedTRC20NotesByOvkOnSolidityServlet;
 import org.tron.core.services.interfaceOnSolidity.http.TriggerConstantContractOnSolidityServlet;
 
-
 @Slf4j(topic = "API")
 public class HttpApiOnSolidityService implements Service {
 
-  private int port = Args.getInstance().getSolidityHttpPort();
+  private final int port = getInstance().getSolidityHttpPort();
 
   private Server server;
 
@@ -308,7 +308,7 @@ public class HttpApiOnSolidityService implements Service {
           .setPathSpecs(new String[] {"/walletsolidity/*",
               "/wallet/getnodeinfo"});
 
-      int maxHttpConnectNumber = Args.getInstance().getMaxHttpConnectNumber();
+      int maxHttpConnectNumber = getInstance().getMaxHttpConnectNumber();
       if (maxHttpConnectNumber > 0) {
         server.addBean(new ConnectionLimit(maxHttpConnectNumber, server));
       }

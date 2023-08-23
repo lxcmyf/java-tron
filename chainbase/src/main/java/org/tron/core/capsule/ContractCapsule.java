@@ -28,7 +28,6 @@ import org.tron.protos.contract.SmartContractOuterClass.CreateSmartContract;
 import org.tron.protos.contract.SmartContractOuterClass.SmartContract;
 import org.tron.protos.contract.SmartContractOuterClass.SmartContract.ABI;
 import org.tron.protos.contract.SmartContractOuterClass.SmartContractDataWrapper;
-import org.tron.protos.contract.SmartContractOuterClass.SmartContractDataWrapperOrBuilder;
 import org.tron.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 
 @Slf4j(topic = "capsule")
@@ -55,8 +54,7 @@ public class ContractCapsule implements ProtoCapsule<SmartContract> {
   public static CreateSmartContract getSmartContractFromTransaction(Transaction trx) {
     try {
       Any any = trx.getRawData().getContract(0).getParameter();
-      CreateSmartContract createSmartContract = any.unpack(CreateSmartContract.class);
-      return createSmartContract;
+      return any.unpack(CreateSmartContract.class);
     } catch (InvalidProtocolBufferException e) {
       return null;
     }
@@ -65,8 +63,7 @@ public class ContractCapsule implements ProtoCapsule<SmartContract> {
   public static TriggerSmartContract getTriggerContractFromTransaction(Transaction trx) {
     try {
       Any any = trx.getRawData().getContract(0).getParameter();
-      TriggerSmartContract contractTriggerContract = any.unpack(TriggerSmartContract.class);
-      return contractTriggerContract;
+      return any.unpack(TriggerSmartContract.class);
     } catch (InvalidProtocolBufferException e) {
       return null;
     }

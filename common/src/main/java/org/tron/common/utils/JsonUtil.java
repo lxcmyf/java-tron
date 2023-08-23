@@ -1,11 +1,11 @@
 package org.tron.common.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class JsonUtil {
 
-  public static final <T> T json2Obj(String jsonString, Class<T> clazz) {
+  public static <T> T json2Obj(String jsonString, Class<T> clazz) {
     if (!StringUtils.isEmpty(jsonString) && clazz != null) {
       try {
         ObjectMapper om = new ObjectMapper();
@@ -18,7 +18,7 @@ public class JsonUtil {
     }
   }
 
-  public static final String obj2Json(Object obj) {
+  public static String obj2Json(Object obj) {
     if (obj == null) {
       return null;
     } else {

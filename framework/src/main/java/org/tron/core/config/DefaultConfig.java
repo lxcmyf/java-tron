@@ -1,5 +1,7 @@
 package org.tron.core.config;
 
+import static org.tron.common.parameter.CommonParameter.getInstance;
+
 import com.alibaba.fastjson.parser.ParserConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.RocksDB;
@@ -10,7 +12,6 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.tron.common.utils.StorageUtils;
-import org.tron.core.config.args.Args;
 import org.tron.core.db.RecentTransactionStore;
 import org.tron.core.db.RevokingDatabase;
 import org.tron.core.db.TransactionCache;
@@ -55,7 +56,7 @@ public class DefaultConfig {
 
   @Bean
   public RpcApiServiceOnSolidity getRpcApiServiceOnSolidity() {
-    boolean isSolidityNode = Args.getInstance().isSolidityNode();
+    boolean isSolidityNode = getInstance().isSolidityNode();
     if (!isSolidityNode) {
       return new RpcApiServiceOnSolidity();
     }
@@ -65,7 +66,7 @@ public class DefaultConfig {
 
   @Bean
   public HttpApiOnSolidityService getHttpApiOnSolidityService() {
-    boolean isSolidityNode = Args.getInstance().isSolidityNode();
+    boolean isSolidityNode = getInstance().isSolidityNode();
     if (!isSolidityNode) {
       return new HttpApiOnSolidityService();
     }
@@ -75,7 +76,7 @@ public class DefaultConfig {
 
   @Bean
   public RpcApiServiceOnPBFT getRpcApiServiceOnPBFT() {
-    boolean isSolidityNode = Args.getInstance().isSolidityNode();
+    boolean isSolidityNode = getInstance().isSolidityNode();
     if (!isSolidityNode) {
       return new RpcApiServiceOnPBFT();
     }
@@ -85,7 +86,7 @@ public class DefaultConfig {
 
   @Bean
   public HttpApiOnPBFTService getHttpApiOnPBFTService() {
-    boolean isSolidityNode = Args.getInstance().isSolidityNode();
+    boolean isSolidityNode = getInstance().isSolidityNode();
     if (!isSolidityNode) {
       return new HttpApiOnPBFTService();
     }

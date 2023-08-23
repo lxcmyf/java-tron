@@ -30,6 +30,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.IOException;
 import java.security.SignatureException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -101,7 +102,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
   @Setter
   private TransactionTrace trxTrace;
 
-  private StringBuilder toStringBuff = new StringBuilder();
+  private final StringBuilder toStringBuff = new StringBuilder();
   @Getter
   @Setter
   private long time;
@@ -229,7 +230,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
           "Signature count is " + (sigs.size()) + " more than key counts of permission : "
               + permission.getKeysCount());
     }
-    HashMap addMap = new HashMap();
+    HashMap<String, Long> addMap = new HashMap<>();
     for (ByteString sig : sigs) {
       if (sig.size() < 65) {
         throw new SignatureFormatException(
@@ -393,7 +394,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
   public static void validContractProto(Transaction.Contract contract)
       throws InvalidProtocolBufferException, P2pException {
     Any contractParameter = contract.getParameter();
-    Class clazz = TransactionFactory.getContract(contract.getType());
+    Class<? extends GeneratedMessageV3> clazz = TransactionFactory.getContract(contract.getType());
     if (clazz == null) {
       throw new P2pException(PROTOBUF_ERROR, PROTOBUF_ERROR.getDesc());
     }
@@ -485,10 +486,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     }
     checkPermission(permissionId, permission, contract);
     long weight = checkWeight(permission, transaction.getSignatureList(), hash, null);
-    if (weight >= permission.getThreshold()) {
-      return true;
-    }
-    return false;
+    return weight >= permission.getThreshold();
   }
 
   public void resetResult() {
@@ -746,10 +744,12 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     if (!getInstance().getRawData().getContractList().isEmpty()) {
       toStringBuff.append("contract list:{ ");
       getInstance().getRawData().getContractList().forEach(contract -> {
-        toStringBuff.append("[" + i + "] ").append("type: ").append(contract.getType())
+        toStringBuff.append("[").append(i).append("] ").append("type: ").append(contract.getType())
             .append("\n");
-        toStringBuff.append("from address=").append(getOwner(contract)).append("\n");
-        toStringBuff.append("to address=").append(getToAddress(contract)).append("\n");
+        toStringBuff.append("from address=").append(Arrays.toString(getOwner(contract)))
+            .append("\n");
+        toStringBuff.append("to address=").append(Arrays.toString(getToAddress(contract)))
+            .append("\n");
         if (contract.getType().equals(ContractType.TransferContract)) {
           TransferContract transferContract;
           try {
@@ -821,7 +821,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
 
   /**
    * Check if a transaction capsule contains a smart contract transaction or not.
-   * @return
+   * @return boolean
    */
   public boolean isContractType() {
     try {

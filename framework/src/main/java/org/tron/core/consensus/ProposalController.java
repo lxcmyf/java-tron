@@ -32,7 +32,7 @@ public class ProposalController {
 
     long proposalNum = latestProposalNum;
 
-    ProposalCapsule proposalCapsule = null;
+    ProposalCapsule proposalCapsule;
 
     while (proposalNum > 0) {
       try {

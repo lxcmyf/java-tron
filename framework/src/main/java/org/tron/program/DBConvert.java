@@ -154,10 +154,10 @@ public class DBConvert implements Callable<Boolean> {
           fails--;
         }
       } catch (InterruptedException e) {
-        logger.error("{}", e);
+        logger.error("", e);
         Thread.currentThread().interrupt();
       } catch (ExecutionException e) {
-        logger.error("{}", e);
+        logger.error("", e);
       }
     }
 
@@ -187,9 +187,9 @@ public class DBConvert implements Callable<Boolean> {
     options.setIncreaseParallelism(1);
     options.setNumLevels(7);
     options.setMaxOpenFiles(5000);
-    options.setTargetFileSizeBase(64 * 1024 * 1024);
+    options.setTargetFileSizeBase(64L * 1024 * 1024);
     options.setTargetFileSizeMultiplier(1);
-    options.setMaxBytesForLevelBase(512 * 1024 * 1024);
+    options.setMaxBytesForLevelBase(512L * 1024 * 1024);
     options.setMaxBackgroundCompactions(Math.max(1, Runtime.getRuntime().availableProcessors()));
     options.setLevel0FileNumCompactionTrigger(4);
     options.setLevelCompactionDynamicLevelBytes(true);
@@ -198,8 +198,8 @@ public class DBConvert implements Callable<Boolean> {
     }
     final BlockBasedTableConfig tableCfg;
     options.setTableFormatConfig(tableCfg = new BlockBasedTableConfig());
-    tableCfg.setBlockSize(64 * 1024);
-    tableCfg.setBlockCacheSize(32 * 1024 * 1024);
+    tableCfg.setBlockSize(64L * 1024);
+    tableCfg.setBlockCacheSize(32L * 1024 * 1024);
     tableCfg.setCacheIndexAndFilterBlocks(true);
     tableCfg.setPinL0FilterAndIndexBlocksInCache(true);
     tableCfg.setFilter(new BloomFilter(10, false));
@@ -212,7 +212,7 @@ public class DBConvert implements Callable<Boolean> {
     try (Options options = newDefaultRocksDbOptions()) {
       database = RocksDB.open(options, db.toString());
     } catch (Exception e) {
-      logger.error("{}", e);
+      logger.error("", e);
     }
     return database;
   }
@@ -292,7 +292,7 @@ public class DBConvert implements Callable<Boolean> {
           try {
             batchInsert(rocks, keys, values);
           } catch (Exception e) {
-            logger.error("{}", e);
+            logger.error("", e);
             return false;
           }
         }
@@ -302,14 +302,14 @@ public class DBConvert implements Callable<Boolean> {
         try {
           batchInsert(rocks, keys, values);
         } catch (Exception e) {
-          logger.error("{}", e);
+          logger.error("", e);
           return false;
         }
       }
       // check
       check(rocks);
     }  catch (Exception e) {
-      logger.error("{}", e);
+      logger.error("", e);
       return false;
     } finally {
       try {
@@ -317,7 +317,7 @@ public class DBConvert implements Callable<Boolean> {
         rocks.close();
         JniDBFactory.popMemoryPool();
       } catch (Exception e1) {
-        logger.error("{}", e1);
+        logger.error("", e1);
       }
     }
     return dstDbKeyCount == srcDbKeyCount && dstDbKeySum == srcDbKeySum
@@ -369,7 +369,7 @@ public class DBConvert implements Callable<Boolean> {
 
     File levelDbFile = srcDbPath.toFile();
     if (!levelDbFile.exists()) {
-      logger.info(" {} does not exist.", srcDbPath.toString());
+      logger.info(" {} does not exist.", srcDbPath);
       return false;
     }
 

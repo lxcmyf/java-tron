@@ -1,5 +1,6 @@
 package org.tron.core.db;
 
+import static org.tron.common.parameter.CommonParameter.getInstance;
 import static org.tron.common.utils.Commons.adjustBalance;
 import static org.tron.core.exception.BadBlockException.TypeEnum.CALC_MERKLE_ROOT_FAILED;
 import static org.tron.protos.Protocol.Transaction.Contract.ContractType.TransferContract;
@@ -175,11 +176,11 @@ public class Manager {
   private static final int SLEEP_FOR_WAIT_LOCK = 10;
   private static final int NO_BLOCK_WAITING_LOCK = 0;
   private final int shieldedTransInPendingMaxCounts =
-      Args.getInstance().getShieldedTransInPendingMaxCounts();
+      getInstance().getShieldedTransInPendingMaxCounts();
   @Getter
   @Setter
   public boolean eventPluginLoaded = false;
-  private int maxTransactionPendingSize = Args.getInstance().getMaxTransactionPendingSize();
+  private final int maxTransactionPendingSize = getInstance().getMaxTransactionPendingSize();
   @Autowired(required = false)
   @Getter
   private TransactionCache transactionCache;
@@ -189,12 +190,12 @@ public class Manager {
   @Autowired
   private RevokingDatabase revokingStore;
   @Getter
-  private SessionOptional session = SessionOptional.instance();
+  private final SessionOptional session = SessionOptional.instance();
   @Getter
   @Setter
   private boolean isSyncMode;
   @Getter
-  private Object forkLock = new Object();
+  private final Object forkLock = new Object();
   // map<Long, IncrementalMerkleTree>
   @Getter
   @Setter
@@ -208,16 +209,17 @@ public class Manager {
   private ExecutorService validateSignService;
   private boolean isRunRePushThread = true;
   private boolean isRunTriggerCapsuleProcessThread = true;
-  private BlockingQueue<TransactionCapsule> pushTransactionQueue = new LinkedBlockingQueue<>();
+  private final BlockingQueue<TransactionCapsule> pushTransactionQueue =
+      new LinkedBlockingQueue<>();
   @Getter
-  private Cache<Sha256Hash, Boolean> transactionIdCache = CacheBuilder
+  private final Cache<Sha256Hash, Boolean> transactionIdCache = CacheBuilder
       .newBuilder().maximumSize(TX_ID_CACHE_SIZE)
       .expireAfterWrite(1, TimeUnit.HOURS).recordStats().build();
   @Autowired
   private AccountStateCallBack accountStateCallBack;
   @Autowired
   private TrieService trieService;
-  private Set<String> ownerAddressSet = new HashSet<>();
+  private final Set<String> ownerAddressSet = new HashSet<>();
   @Getter
   @Autowired
   private MortgageService mortgageService;
@@ -229,9 +231,9 @@ public class Manager {
   // transactions cache
   private BlockingQueue<TransactionCapsule> pendingTransactions;
   @Getter
-  private AtomicInteger shieldedTransInPendingCounts = new AtomicInteger(0);
+  private final AtomicInteger shieldedTransInPendingCounts = new AtomicInteger(0);
   // transactions popped
-  private List<TransactionCapsule> poppedTransactions =
+  private final List<TransactionCapsule> poppedTransactions =
       Collections.synchronizedList(Lists.newArrayList());
   // the capacity is equal to Integer.MAX_VALUE default
   private BlockingQueue<TransactionCapsule> rePushTransactions;
@@ -250,20 +252,20 @@ public class Manager {
   @Getter
   private final ThreadLocal<Histogram.Timer> blockedTimer = new ThreadLocal<>();
 
-  private AtomicInteger blockWaitLock = new AtomicInteger(0);
-  private Object transactionLock = new Object();
+  private final AtomicInteger blockWaitLock = new AtomicInteger(0);
+  private final Object transactionLock = new Object();
 
   private ExecutorService rePushEs;
-  private static final String rePushEsName = "repush";
+  private static final String RE_PUSH_ES_NAME = "repush";
   private ExecutorService triggerEs;
-  private static final String triggerEsName = "event-trigger";
+  private static final String TRIGGER_ES_NAME = "event-trigger";
   private ExecutorService filterEs;
-  private static final String filterEsName = "filter";
+  private static final String FILTER_ES_NAME = "filter";
 
   /**
    * Cycle thread to rePush Transactions
    */
-  private Runnable rePushLoop =
+  private final Runnable rePushLoop =
       () -> {
         while (isRunRePushThread) {
           TransactionCapsule tx = null;
@@ -291,7 +293,7 @@ public class Manager {
           }
         }
       };
-  private Runnable triggerCapsuleProcessLoop =
+  private final Runnable triggerCapsuleProcessLoop =
       () -> {
         while (isRunTriggerCapsuleProcessThread) {
           try {
@@ -308,7 +310,7 @@ public class Manager {
         }
       };
 
-  private Runnable filterProcessLoop =
+  private final Runnable filterProcessLoop =
       () -> {
         while (isRunFilterProcessThread) {
           try {
@@ -326,7 +328,7 @@ public class Manager {
         }
       };
 
-  private Comparator downComparator = (Comparator<TransactionCapsule>) (o1, o2) -> Long
+  private final Comparator<TransactionCapsule> downComparator = (o1, o2) -> Long
       .compare(o2.getOrder(), o1.getOrder());
 
   public WitnessStore getWitnessStore() {
@@ -436,17 +438,17 @@ public class Manager {
 
   public void stopRePushThread() {
     isRunRePushThread = false;
-    ExecutorServiceManager.shutdownAndAwaitTermination(rePushEs, rePushEsName);
+    ExecutorServiceManager.shutdownAndAwaitTermination(rePushEs, RE_PUSH_ES_NAME);
   }
 
   public void stopRePushTriggerThread() {
     isRunTriggerCapsuleProcessThread = false;
-    ExecutorServiceManager.shutdownAndAwaitTermination(triggerEs, triggerEsName);
+    ExecutorServiceManager.shutdownAndAwaitTermination(triggerEs, TRIGGER_ES_NAME);
   }
 
   public void stopFilterProcessThread() {
     isRunFilterProcessThread = false;
-    ExecutorServiceManager.shutdownAndAwaitTermination(filterEs, filterEsName);
+    ExecutorServiceManager.shutdownAndAwaitTermination(filterEs, FILTER_ES_NAME);
   }
 
   public void stopValidateSignThread() {
@@ -467,10 +469,10 @@ public class Manager {
     transactionCache.initCache();
     this.setProposalController(ProposalController.createInstance(this));
     this.setMerkleContainer(
-        merkleContainer.createInstance(chainBaseManager.getMerkleTreeStore(),
+        MerkleContainer.createInstance(chainBaseManager.getMerkleTreeStore(),
             chainBaseManager.getMerkleTreeIndexStore()));
-    if (Args.getInstance().isOpenTransactionSort()) {
-      this.pendingTransactions = new PriorityBlockingQueue(2000, downComparator);
+    if (getInstance().isOpenTransactionSort()) {
+      this.pendingTransactions = new PriorityBlockingQueue<>(2000, downComparator);
       this.rePushTransactions = new PriorityBlockingQueue<>(2000, downComparator);
     } else {
       this.pendingTransactions = new LinkedBlockingQueue<>();
@@ -491,18 +493,18 @@ public class Manager {
           getDynamicPropertiesStore().getLatestBlockHeaderHash());
       logger.error(
           "Please delete database directory({}) and restart",
-          Args.getInstance().getOutputDirectory());
+          getInstance().getOutputDirectory());
       System.exit(1);
     } catch (BadItemException e) {
       logger.error("DB data broken {}.", e.getMessage());
       logger.error(
           "Please delete database directory({}) and restart.",
-          Args.getInstance().getOutputDirectory());
+          getInstance().getOutputDirectory());
       System.exit(1);
     }
     getChainBaseManager().getForkController().init(this.chainBaseManager);
 
-    if (Args.getInstance().isNeedToUpdateAsset() && needToUpdateAsset()) {
+    if (getInstance().isNeedToUpdateAsset() && needToUpdateAsset()) {
       new AssetUpdateHelper(chainBaseManager).doWork();
     }
 
@@ -537,19 +539,19 @@ public class Manager {
     }
     revokingStore.enable();
     validateSignService = Executors
-        .newFixedThreadPool(Args.getInstance().getValidateSignThreadNum());
-    rePushEs = ExecutorServiceManager.newSingleThreadExecutor(rePushEsName, true);
+        .newFixedThreadPool(getInstance().getValidateSignThreadNum());
+    rePushEs = ExecutorServiceManager.newSingleThreadExecutor(RE_PUSH_ES_NAME, true);
     rePushEs.submit(rePushLoop);
     // add contract event listener for subscribing
-    if (Args.getInstance().isEventSubscribe()) {
+    if (getInstance().isEventSubscribe()) {
       startEventSubscribing();
-      triggerEs = ExecutorServiceManager.newSingleThreadExecutor(triggerEsName, true);
+      triggerEs = ExecutorServiceManager.newSingleThreadExecutor(TRIGGER_ES_NAME, true);
       triggerEs.submit(triggerCapsuleProcessLoop);
     }
 
     // start json rpc filter process
-    if (CommonParameter.getInstance().isJsonRpcFilterEnabled()) {
-      filterEs = ExecutorServiceManager.newSingleThreadExecutor(filterEsName);
+    if (getInstance().isJsonRpcFilterEnabled()) {
+      filterEs = ExecutorServiceManager.newSingleThreadExecutor(FILTER_ES_NAME);
       filterEs.submit(filterProcessLoop);
     }
 
@@ -566,7 +568,7 @@ public class Manager {
       System.exit(1);
     }
 
-    maxFlushCount = CommonParameter.getInstance().getStorage().getMaxFlushCount();
+    maxFlushCount = getInstance().getStorage().getMaxFlushCount();
   }
 
   /**
@@ -577,16 +579,16 @@ public class Manager {
     BlockCapsule genesisBlock = chainBaseManager.getGenesisBlock();
 
     if (chainBaseManager.containBlock(genesisBlock.getBlockId())) {
-      Args.getInstance().setChainId(genesisBlock.getBlockId().toString());
+      getInstance().setChainId(genesisBlock.getBlockId().toString());
     } else {
       if (chainBaseManager.hasBlocks()) {
         logger.error(
             "Genesis block modify, please delete database directory({}) and restart.",
-            Args.getInstance().getOutputDirectory());
+            getInstance().getOutputDirectory());
         System.exit(1);
       } else {
         logger.info("Create genesis block.");
-        Args.getInstance().setChainId(genesisBlock.getBlockId().toString());
+        getInstance().setChainId(genesisBlock.getBlockId().toString());
 
         chainBaseManager.getBlockStore().put(genesisBlock.getBlockId().getBytes(), genesisBlock);
         chainBaseManager.getBlockIndexStore().put(genesisBlock.getBlockId());
@@ -611,7 +613,7 @@ public class Manager {
    * save account into database.
    */
   public void initAccount() {
-    final CommonParameter parameter = CommonParameter.getInstance();
+    final CommonParameter parameter = getInstance();
     final GenesisBlock genesisBlockArg = parameter.getGenesisBlock();
     genesisBlockArg
         .getAssets()
@@ -665,7 +667,7 @@ public class Manager {
    * save witnesses into database.
    */
   private void initWitness() {
-    final CommonParameter commonParameter = Args.getInstance();
+    final CommonParameter commonParameter = getInstance();
     final GenesisBlock genesisBlockArg = commonParameter.getGenesisBlock();
     genesisBlockArg
         .getWitnesses()
@@ -697,9 +699,9 @@ public class Manager {
   private void initAutoStop() {
     final long headNum = chainBaseManager.getHeadBlockNum();
     final long headTime = chainBaseManager.getHeadBlockTimeStamp();
-    final long exitHeight = CommonParameter.getInstance().getShutdownBlockHeight();
-    final long exitCount = CommonParameter.getInstance().getShutdownBlockCount();
-    final CronExpression blockTime = Args.getInstance().getShutdownBlockTime();
+    final long exitHeight = getInstance().getShutdownBlockHeight();
+    final long exitCount = getInstance().getShutdownBlockCount();
+    final CronExpression blockTime = getInstance().getShutdownBlockTime();
 
     if (exitHeight > 0 && exitHeight < headNum) {
       throw new IllegalArgumentException(
@@ -734,17 +736,17 @@ public class Manager {
               exitCount, blockTime));
     }
 
-    if (exitHeight == headNum && (!Args.getInstance().isP2pDisable())) {
+    if (exitHeight == headNum && (!getInstance().isP2pDisable())) {
       logger.info("Auto-stop hit: shutDownBlockHeight: {}, currentHeaderNum: {}, exit now",
           exitHeight, headNum);
       System.exit(0);
     }
 
     if (exitCount > 0) {
-      CommonParameter.getInstance().setShutdownBlockHeight(headNum + exitCount);
+      getInstance().setShutdownBlockHeight(headNum + exitCount);
     }
     // init
-    latestSolidityNumShutDown = CommonParameter.getInstance().getShutdownBlockHeight();
+    latestSolidityNumShutDown = getInstance().getShutdownBlockHeight();
   }
 
   public AccountStore getAccountStore() {
@@ -834,7 +836,7 @@ public class Manager {
       TooBigTransactionException, TransactionExpirationException,
       ReceiptCheckErrException, VMIllegalException, TooBigTransactionResultException {
 
-    if (isShieldedTransaction(trx.getInstance()) && !Args.getInstance()
+    if (isShieldedTransaction(trx.getInstance()) && !getInstance()
         .isFullNodeAllowShieldedTransactionArgs()) {
       return true;
     }
@@ -1024,7 +1026,7 @@ public class Manager {
     processBlock(block, txs);
     chainBaseManager.getBlockStore().put(block.getBlockId().getBytes(), block);
     chainBaseManager.getBlockIndexStore().put(block.getBlockId());
-    if (block.getTransactions().size() != 0) {
+    if (!block.getTransactions().isEmpty()) {
       chainBaseManager.getTransactionRetStore()
           .put(ByteArray.fromLong(block.getNum()), block.getResult());
     }
@@ -1032,8 +1034,8 @@ public class Manager {
     updateFork(block);
     if (System.currentTimeMillis() - block.getTimeStamp() >= 60_000) {
       revokingStore.setMaxFlushCount(maxFlushCount);
-      if (Args.getInstance().getShutdownBlockTime() != null
-          && Args.getInstance().getShutdownBlockTime().getNextValidTimeAfter(
+      if (getInstance().getShutdownBlockTime() != null
+          && getInstance().getShutdownBlockTime().getNextValidTimeAfter(
             new Date(block.getTimeStamp() - maxFlushCount * 1000 * 3L))
           .compareTo(new Date(block.getTimeStamp())) <= 0) {
         revokingStore.setMaxFlushCount(SnapshotManager.DEFAULT_MIN_FLUSH_COUNT);
@@ -1080,7 +1082,8 @@ public class Manager {
     if (CollectionUtils.isNotEmpty(binaryTree.getValue())) {
       while (!getDynamicPropertiesStore()
           .getLatestBlockHeaderHash()
-          .equals(binaryTree.getValue().peekLast().getParentHash())) {
+          .equals(Optional.ofNullable(binaryTree.getValue().peekLast())
+              .map(KhaosBlock::getParentHash).orElse(null))) {
         reOrgContractTrigger();
         reOrgLogsFilter();
         eraseBlock();
@@ -1123,7 +1126,8 @@ public class Manager {
 
             while (!getDynamicPropertiesStore()
                 .getLatestBlockHeaderHash()
-                .equals(binaryTree.getValue().peekLast().getParentHash())) {
+                .equals(Optional.ofNullable(binaryTree.getValue().peekLast())
+                    .map(KhaosBlock::getParentHash).orElse(null))) {
               eraseBlock();
             }
 
@@ -1156,7 +1160,7 @@ public class Manager {
 
   public List<TransactionCapsule> getVerifyTxs(BlockCapsule block) {
 
-    if (pendingTransactions.size() == 0) {
+    if (pendingTransactions.isEmpty()) {
       return block.getTransactions();
     }
 
@@ -1216,8 +1220,8 @@ public class Manager {
                 block.getNum(), rePushTransactions.size(), pendingTransactions.size(),
                 block.getTransactions().size(), txs.size());
 
-        if (CommonParameter.getInstance().getShutdownBlockTime() != null
-                && CommonParameter.getInstance().getShutdownBlockTime()
+        if (getInstance().getShutdownBlockTime() != null
+                && getInstance().getShutdownBlockTime()
                 .isSatisfiedBy(new Date(block.getTimeStamp()))) {
           latestSolidityNumShutDown = block.getNum();
         }
@@ -1372,7 +1376,7 @@ public class Manager {
   /**
    * Get the fork branch.
    */
-  public LinkedList<BlockId> getBlockChainHashesOnFork(final BlockId forkBlockHash)
+  public List<BlockId> getBlockChainHashesOnFork(final BlockId forkBlockHash)
       throws NonCommonBlockException {
     final Pair<LinkedList<KhaosBlock>, LinkedList<KhaosBlock>> branch =
         this.khaosDb.getBranch(
@@ -1548,11 +1552,11 @@ public class Manager {
     AtomicInteger shieldedTransCounts = new AtomicInteger(0);
     List<TransactionCapsule> toBePacked = new ArrayList<>();
     long currentSize = blockCapsule.getInstance().getSerializedSize();
-    boolean isSort = Args.getInstance().isOpenTransactionSort();
-    while (pendingTransactions.size() > 0 || rePushTransactions.size() > 0) {
+    boolean isSort = getInstance().isOpenTransactionSort();
+    while (!pendingTransactions.isEmpty() || !rePushTransactions.isEmpty()) {
       boolean fromPending = false;
       TransactionCapsule trx;
-      if (pendingTransactions.size() > 0) {
+      if (!pendingTransactions.isEmpty()) {
         trx = pendingTransactions.peek();
         if (isSort) {
           TransactionCapsule trxRepush = rePushTransactions.peek();
@@ -1780,7 +1784,7 @@ public class Manager {
 
     chainBaseManager.getBalanceTraceStore().resetCurrentBlockTrace();
 
-    if (CommonParameter.getInstance().isJsonRpcFilterEnabled()) {
+    if (getInstance().isJsonRpcFilterEnabled()) {
       Bloom blockBloom = chainBaseManager.getSectionBloomStore()
           .initBlockSection(transactionRetCapsule);
       chainBaseManager.getSectionBloomStore().write(block.getNum());
@@ -1831,10 +1835,10 @@ public class Manager {
     if (blockNum > lastSolidityNum) {
       return;
     }
-    BlockingQueue contractLogTriggersQueue = Args.getSolidityContractLogTriggerMap()
-        .get(blockNum);
+    BlockingQueue<ContractLogTrigger> contractLogTriggersQueue =
+        Args.getSolidityContractLogTriggerMap().get(blockNum);
     while (!contractLogTriggersQueue.isEmpty()) {
-      ContractLogTrigger triggerCapsule = (ContractLogTrigger) contractLogTriggersQueue.poll();
+      ContractLogTrigger triggerCapsule = contractLogTriggersQueue.poll();
       if (triggerCapsule == null) {
         break;
       }
@@ -1854,10 +1858,10 @@ public class Manager {
     if (blockNum > lastSolidityNum) {
       return;
     }
-    BlockingQueue contractEventTriggersQueue = Args.getSolidityContractEventTriggerMap()
-        .get(blockNum);
+    BlockingQueue<ContractEventTrigger> contractEventTriggersQueue
+        = Args.getSolidityContractEventTriggerMap().get(blockNum);
     while (!contractEventTriggersQueue.isEmpty()) {
-      ContractEventTrigger triggerCapsule = (ContractEventTrigger) contractEventTriggersQueue
+      ContractEventTrigger triggerCapsule = contractEventTriggersQueue
           .poll();
       if (triggerCapsule == null) {
         break;
@@ -1884,10 +1888,8 @@ public class Manager {
   }
 
   public void updateRecentTransaction(BlockCapsule block) {
-    List list = new ArrayList<>();
-    block.getTransactions().forEach(capsule -> {
-      list.add(capsule.getTransactionId().toString());
-    });
+    List<String> list = new ArrayList<>();
+    block.getTransactions().forEach(capsule -> list.add(capsule.getTransactionId().toString()));
     RecentTransactionItem item = new RecentTransactionItem(block.getNum(), list);
     chainBaseManager.getRecentTransactionStore().put(
             ByteArray.subArray(ByteArray.fromLong(block.getNum()), 6, 8),
@@ -1937,7 +1939,7 @@ public class Manager {
   private void preValidateTransactionSign(List<TransactionCapsule> txs)
       throws InterruptedException, ValidateSignatureException {
     int transSize = txs.size();
-    if (transSize <= 0) {
+    if (transSize == 0) {
       return;
     }
     Histogram.Timer requestTimer = Metrics.histogramStartTimer(
@@ -2012,19 +2014,19 @@ public class Manager {
 
     try {
       eventPluginLoaded = EventPluginLoader.getInstance()
-          .start(Args.getInstance().getEventPluginConfig());
+          .start(getInstance().getEventPluginConfig());
 
       if (!eventPluginLoaded) {
         logger.error("Failed to load eventPlugin.");
       }
 
-      FilterQuery eventFilter = Args.getInstance().getEventFilter();
+      FilterQuery eventFilter = getInstance().getEventFilter();
       if (!Objects.isNull(eventFilter)) {
         EventPluginLoader.getInstance().setFilterQuery(eventFilter);
       }
 
     } catch (Exception e) {
-      logger.error("{}", e);
+      logger.error("", e);
     }
   }
 
@@ -2069,7 +2071,7 @@ public class Manager {
       }
     }
 
-    if (CommonParameter.getInstance().isJsonRpcHttpSolidityNodeEnable()) {
+    if (getInstance().isJsonRpcHttpSolidityNodeEnable()) {
       postSolidityFilter(oldSolidNum, latestSolidifiedBlockNumber);
     }
     lastUsedSolidityNum = latestSolidifiedBlockNumber;
@@ -2132,7 +2134,7 @@ public class Manager {
   }
 
   private void reOrgLogsFilter() {
-    if (CommonParameter.getInstance().isJsonRpcHttpFullNodeEnable()) {
+    if (getInstance().isJsonRpcHttpFullNodeEnable()) {
       logger.info("Switch fork occurred, post reOrgLogsFilter.");
 
       try {
@@ -2184,7 +2186,7 @@ public class Manager {
 
   private void postBlockTrigger(final BlockCapsule blockCapsule) {
     // post block and logs for jsonrpc
-    if (CommonParameter.getInstance().isJsonRpcHttpFullNodeEnable()) {
+    if (getInstance().isJsonRpcHttpFullNodeEnable()) {
       postBlockFilter(blockCapsule, false);
       postLogsFilter(blockCapsule, false, false);
     }
@@ -2323,7 +2325,6 @@ public class Manager {
     pendingTransactions.forEach(tx -> {
       if (tx.getTransactionId().equals(txHash)) {
         transactionCapsule.set(tx);
-        return;
       }
     });
     if (transactionCapsule.get() != null) {
@@ -2332,7 +2333,6 @@ public class Manager {
     rePushTransactions.forEach(tx -> {
       if (tx.getTransactionId().equals(txHash)) {
         transactionCapsule.set(tx);
-        return;
       }
     });
     return transactionCapsule.get();
@@ -2340,19 +2340,14 @@ public class Manager {
 
   public Collection<String> getTxListFromPending() {
     Set<String> result = new HashSet<>();
-    pendingTransactions.forEach(tx -> {
-      result.add(tx.getTransactionId().toString());
-    });
-    rePushTransactions.forEach(tx -> {
-      result.add(tx.getTransactionId().toString());
-    });
+    pendingTransactions.forEach(tx -> result.add(tx.getTransactionId().toString()));
+    rePushTransactions.forEach(tx -> result.add(tx.getTransactionId().toString()));
     return result;
   }
 
   public long getPendingSize() {
-    long value = getPendingTransactions().size() + getRePushTransactions().size()
+    return (long) getPendingTransactions().size() + getRePushTransactions().size()
         + getPoppedTransactions().size();
-    return value;
   }
 
   private void initLiteNode() {
@@ -2418,9 +2413,9 @@ public class Manager {
 
   private static class ValidateSignTask implements Callable<Boolean> {
 
-    private TransactionCapsule trx;
-    private CountDownLatch countDownLatch;
-    private ChainBaseManager manager;
+    private final TransactionCapsule trx;
+    private final CountDownLatch countDownLatch;
+    private final ChainBaseManager manager;
 
     ValidateSignTask(TransactionCapsule trx, CountDownLatch countDownLatch,
         ChainBaseManager manager) {

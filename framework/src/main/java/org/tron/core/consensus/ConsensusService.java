@@ -1,5 +1,6 @@
 package org.tron.core.consensus;
 
+import static org.tron.common.parameter.CommonParameter.getInstance;
 import static org.tron.common.utils.ByteArray.fromHexString;
 
 import com.google.protobuf.ByteString;
@@ -34,14 +35,14 @@ public class ConsensusService {
   @Autowired
   private PbftBaseImpl pbftBaseImpl;
 
-  private CommonParameter parameter = Args.getInstance();
+  private final CommonParameter parameter = getInstance();
 
   public void start() {
     Param param = Param.getInstance();
     param.setEnable(parameter.isWitness());
     param.setGenesisBlock(parameter.getGenesisBlock());
     param.setMinParticipationRate(parameter.getMinParticipationRate());
-    param.setBlockProduceTimeoutPercent(Args.getInstance().getBlockProducedTimeOut());
+    param.setBlockProduceTimeoutPercent(getInstance().getBlockProducedTimeOut());
     param.setNeedSyncCheck(parameter.isNeedSyncCheck());
     param.setAgreeNodeCount(parameter.getAgreeNodeCount());
     List<Miner> miners = new ArrayList<>();
@@ -50,7 +51,7 @@ public class ConsensusService {
       for (String key : privateKeys) {
         byte[] privateKey = fromHexString(key);
         byte[] privateKeyAddress = SignUtils
-            .fromPrivate(privateKey, Args.getInstance().isECKeyCryptoEngine()).getAddress();
+            .fromPrivate(privateKey, getInstance().isECKeyCryptoEngine()).getAddress();
         WitnessCapsule witnessCapsule = witnessStore.get(privateKeyAddress);
         if (null == witnessCapsule) {
           logger.warn("Witness {} is not in witnessStore.", Hex.toHexString(privateKeyAddress));
@@ -65,9 +66,9 @@ public class ConsensusService {
       byte[] privateKey =
           fromHexString(Args.getLocalWitnesses().getPrivateKey());
       byte[] privateKeyAddress = SignUtils.fromPrivate(privateKey,
-          Args.getInstance().isECKeyCryptoEngine()).getAddress();
+          getInstance().isECKeyCryptoEngine()).getAddress();
       byte[] witnessAddress = Args.getLocalWitnesses().getWitnessAccountAddress(
-          Args.getInstance().isECKeyCryptoEngine());
+          getInstance().isECKeyCryptoEngine());
       WitnessCapsule witnessCapsule = witnessStore.get(witnessAddress);
       if (null == witnessCapsule) {
         logger.warn("Witness {} is not in witnessStore.", Hex.toHexString(witnessAddress));

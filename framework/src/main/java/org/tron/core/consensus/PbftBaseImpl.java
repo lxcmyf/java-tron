@@ -29,7 +29,6 @@ public class PbftBaseImpl implements PbftInterface {
     peers.forEach(peerConnection -> {
       if (peerConnection.isNeedSyncFromPeer()) {
         result.set(true);
-        return;
       }
     });
     return result.get();
@@ -41,9 +40,7 @@ public class PbftBaseImpl implements PbftInterface {
     if (peers.isEmpty()) {
       return;
     }
-    peers.forEach(peerConnection -> {
-      peerConnection.sendMessage(message);
-    });
+    peers.forEach(peerConnection -> peerConnection.sendMessage(message));
   }
 
   @Override

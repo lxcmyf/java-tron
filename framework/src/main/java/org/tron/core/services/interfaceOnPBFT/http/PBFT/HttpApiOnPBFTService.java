@@ -1,5 +1,7 @@
 package org.tron.core.services.interfaceOnPBFT.http.PBFT;
 
+import static org.tron.common.parameter.CommonParameter.getInstance;
+
 import java.util.EnumSet;
 import javax.servlet.DispatcherType;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +13,6 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.tron.common.application.Service;
 import org.tron.common.parameter.CommonParameter;
-import org.tron.core.config.args.Args;
 import org.tron.core.services.filter.HttpApiAccessFilter;
 import org.tron.core.services.filter.LiteFnQueryHttpFilter;
 import org.tron.core.services.interfaceOnPBFT.http.EstimateEnergyOnPBFTServlet;
@@ -61,7 +62,7 @@ import org.tron.core.services.interfaceOnPBFT.http.TriggerConstantContractOnPBFT
 @Slf4j(topic = "API")
 public class HttpApiOnPBFTService implements Service {
 
-  private int port = Args.getInstance().getPBFTHttpPort();
+  private final int port = getInstance().getPBFTHttpPort();
 
   private Server server;
 
@@ -274,7 +275,7 @@ public class HttpApiOnPBFTService implements Service {
       context.addServlet(new ServletHolder(getDelegatedResourceV2OnPBFTServlet),
           "/getdelegatedresourcev2");
 
-      int maxHttpConnectNumber = Args.getInstance().getMaxHttpConnectNumber();
+      int maxHttpConnectNumber = getInstance().getMaxHttpConnectNumber();
       if (maxHttpConnectNumber > 0) {
         server.addBean(new ConnectionLimit(maxHttpConnectNumber, server));
       }
