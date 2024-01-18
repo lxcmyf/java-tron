@@ -377,6 +377,7 @@ message Transaction {
       DelegateResourceContract = 57;
       UnDelegateResourceContract = 58;
       CancelAllUnfreezeV2Contract = 59;
+      WithdrawBalanceToContract = 60;
     }
     ContractType type = 1;
     google.protobuf.Any parameter = 2;
