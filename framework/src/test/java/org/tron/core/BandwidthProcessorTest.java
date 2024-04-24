@@ -220,7 +220,7 @@ public class BandwidthProcessorTest extends BaseTest {
         .get(ByteArray.fromHexString(OWNER_ADDRESS));
     ownerCapsule.setFrozen(10_000_000L, 0L);
 
-    Assert.assertEquals(true, processor.contractCreateNewAccount(contract));
+    Assert.assertEquals(true, chainBaseManager.contractCreateNewAccount(contract));
     long bytes = trx.getSerializedSize();
     TransactionTrace trace = new TransactionTrace(trx, StoreFactory
         .getInstance(), new RuntimeImpl());

@@ -102,6 +102,27 @@ public class TransactionExpireTest {
   }
 
   @Test
+  public void testCreateAccountTransactionExceedLimit() {
+    TransferContract transferContract = TransferContract.newBuilder()
+        .setAmount(1L)
+        .setOwnerAddress(ByteString.copyFrom(Args.getLocalWitnesses()
+            .getWitnessAccountAddress(CommonParameter.getInstance().isECKeyCryptoEngine())))
+        .setToAddress(ByteString.copyFrom(ByteArray.fromHexString(
+            (Wallet.getAddressPreFixString() + "A389132D6639FBDA4FBC8B659264E6B7C90DB086"))))
+        .build();
+    TransactionCapsule transactionCapsule =
+        new TransactionCapsule(transferContract, ContractType.TransferContract);
+    transactionCapsule.setReference(blockCapsule.getNum(), blockCapsule.getBlockId().getBytes());
+    Assert.assertEquals(1, blockCapsule.getTimeStamp());
+
+    CommonParameter.getInstance().setMaxCreateAccountTxSize(100);
+    transactionCapsule.sign(ByteArray.fromHexString(Args.getLocalWitnesses().getPrivateKey()));
+
+    GrpcAPI.Return result = wallet.broadcastTransaction(transactionCapsule.getInstance());
+    Assert.assertEquals(response_code.TOO_BIG_TRANSACTION_ERROR, result.getCode());
+  }
+
+  @Test
   public void testTransactionApprovedList() {
     byte[] address = Args.getLocalWitnesses()
         .getWitnessAccountAddress(CommonParameter.getInstance().isECKeyCryptoEngine());

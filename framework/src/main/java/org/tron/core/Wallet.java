@@ -506,6 +506,15 @@ public class Wallet {
           .build();
       }
 
+      Contract contract = trx.getInstance().getRawData().getContract(0);
+      if (chainBaseManager.isTooBigAndCreateNewAccount(contract, trx.getSerializedSize())) {
+        logger.warn("Broadcast transaction {} has failed, create account tx size exceeded limit.",
+            txID);
+        return builder.setResult(false).setCode(response_code.TOO_BIG_TRANSACTION_ERROR)
+            .setMessage(ByteString.copyFromUtf8("create account tx size exceeded limit."))
+            .build();
+      }
+
       if (minEffectiveConnection != 0) {
         if (tronNetDelegate.getActivePeer().isEmpty()) {
           logger.warn("Broadcast transaction {} has failed, no connection.", txID);

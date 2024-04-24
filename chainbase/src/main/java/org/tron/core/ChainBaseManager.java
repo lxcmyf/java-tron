@@ -11,10 +11,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.tron.common.parameter.CommonParameter;
 import org.tron.common.storage.metric.DbStatService;
 import org.tron.common.utils.ForkController;
 import org.tron.common.utils.Sha256Hash;
 import org.tron.common.zksnark.MerkleContainer;
+import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.capsule.BlockCapsule.BlockId;
 import org.tron.core.capsule.TransactionCapsule;
@@ -67,6 +69,9 @@ import org.tron.core.store.VotesStore;
 import org.tron.core.store.WitnessScheduleStore;
 import org.tron.core.store.WitnessStore;
 import org.tron.core.store.ZKProofStore;
+import org.tron.protos.Protocol.Transaction.Contract;
+import org.tron.protos.contract.AssetIssueContractOuterClass.TransferAssetContract;
+import org.tron.protos.contract.BalanceContract.TransferContract;
 
 @Slf4j(topic = "DB")
 @Component
@@ -389,6 +394,41 @@ public class ChainBaseManager {
 
   public boolean isLiteNode() {
     return getNodeType() == NodeType.LITE;
+  }
+
+  public boolean contractCreateNewAccount(Contract contract) {
+    AccountCapsule toAccount;
+    switch (contract.getType()) {
+      case AccountCreateContract:
+        return true;
+      case TransferContract:
+        TransferContract transferContract;
+        try {
+          transferContract = contract.getParameter().unpack(TransferContract.class);
+        } catch (Exception ex) {
+          throw new RuntimeException(ex.getMessage());
+        }
+        toAccount =
+            chainBaseManager.getAccountStore().get(transferContract.getToAddress().toByteArray());
+        return toAccount == null;
+      case TransferAssetContract:
+        TransferAssetContract transferAssetContract;
+        try {
+          transferAssetContract = contract.getParameter().unpack(TransferAssetContract.class);
+        } catch (Exception ex) {
+          throw new RuntimeException(ex.getMessage());
+        }
+        toAccount = chainBaseManager.getAccountStore()
+            .get(transferAssetContract.getToAddress().toByteArray());
+        return toAccount == null;
+      default:
+        return false;
+    }
+  }
+
+  public boolean isTooBigAndCreateNewAccount(Contract contract, long txSize) {
+    return contractCreateNewAccount(contract)
+        && txSize > CommonParameter.getInstance().getMaxCreateAccountTxSize();
   }
 
   public enum  NodeType  {
