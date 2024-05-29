@@ -55,6 +55,7 @@ import org.tron.core.config.args.Args;
 import org.tron.core.consensus.ConsensusService;
 import org.tron.core.exception.AccountResourceInsufficientException;
 import org.tron.core.exception.BadItemException;
+import org.tron.core.exception.BalanceInsufficientException;
 import org.tron.core.exception.ContractExeException;
 import org.tron.core.exception.ContractValidateException;
 import org.tron.core.exception.DupTransactionException;
@@ -2204,7 +2205,8 @@ public class ShieldedReceiveTest extends BaseTest {
       TooBigTransactionResultException, TaposException, TransactionExpirationException,
       ReceiptCheckErrException, DupTransactionException, VMIllegalException,
       ValidateSignatureException, BadItemException, ContractExeException,
-      AccountResourceInsufficientException, InvalidProtocolBufferException, ZksnarkException {
+      AccountResourceInsufficientException, InvalidProtocolBufferException, ZksnarkException,
+      BalanceInsufficientException {
     long ctx = JLibrustzcash.librustzcashSaplingProvingCtxInit();
 
     librustzcashInitZksnarkParams();
@@ -2287,7 +2289,8 @@ public class ShieldedReceiveTest extends BaseTest {
       TooBigTransactionResultException, TaposException, TransactionExpirationException,
       ReceiptCheckErrException, DupTransactionException, VMIllegalException,
       ValidateSignatureException, BadItemException, ContractExeException,
-      AccountResourceInsufficientException, InvalidProtocolBufferException, ZksnarkException {
+      AccountResourceInsufficientException, InvalidProtocolBufferException, ZksnarkException,
+      BalanceInsufficientException {
     long ctx = JLibrustzcash.librustzcashSaplingProvingCtxInit();
 
     librustzcashInitZksnarkParams();

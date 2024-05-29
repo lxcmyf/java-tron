@@ -202,7 +202,8 @@ public class ManagerTest extends BlockGenerate {
       AccountResourceInsufficientException, TransactionExpirationException,
       TooBigTransactionException, DupTransactionException, TaposException, BadNumberBlockException,
       NonCommonBlockException, ReceiptCheckErrException, VMIllegalException,
-      TooBigTransactionResultException, ZksnarkException, EventBloomException {
+      TooBigTransactionResultException, ZksnarkException, EventBloomException,
+      BalanceInsufficientException {
 
     BlockCapsule blockCapsule =
         new BlockCapsule(
@@ -578,7 +579,7 @@ public class ManagerTest extends BlockGenerate {
       BadNumberBlockException, DupTransactionException, ContractExeException,
       ValidateSignatureException, TooBigTransactionResultException, TransactionExpirationException,
       TaposException, ReceiptCheckErrException, TooBigTransactionException,
-      AccountResourceInsufficientException, EventBloomException {
+      AccountResourceInsufficientException, EventBloomException, BalanceInsufficientException {
 
     String key = PublicMethod.getRandomPrivateKey();
     String key2 = PublicMethod.getRandomPrivateKey();
@@ -709,7 +710,7 @@ public class ManagerTest extends BlockGenerate {
       TransactionExpirationException, TooBigTransactionException, DupTransactionException,
       BadBlockException, TaposException, BadNumberBlockException, NonCommonBlockException,
       ReceiptCheckErrException, VMIllegalException, TooBigTransactionResultException,
-      ZksnarkException, EventBloomException {
+      ZksnarkException, EventBloomException, BalanceInsufficientException {
     Args.setParam(new String[]{"--witness"}, Constant.TEST_CONF);
     long size = chainManager.getBlockStore().size();
     //  System.out.print("block store size:" + size + "\n");
@@ -838,7 +839,7 @@ public class ManagerTest extends BlockGenerate {
       DupTransactionException, BadBlockException,
       TaposException, BadNumberBlockException, NonCommonBlockException,
       ReceiptCheckErrException, VMIllegalException, TooBigTransactionResultException,
-      ZksnarkException, EventBloomException {
+      ZksnarkException, EventBloomException, BalanceInsufficientException {
     Args.setParam(new String[]{"--witness"}, Constant.TEST_CONF);
     long size = chainManager.getBlockStore().size();
     System.out.print("block store size:" + size + "\n");
@@ -950,7 +951,7 @@ public class ManagerTest extends BlockGenerate {
       TransactionExpirationException, TooBigTransactionException, DupTransactionException,
       BadBlockException, TaposException, BadNumberBlockException, NonCommonBlockException,
       ReceiptCheckErrException, VMIllegalException, TooBigTransactionResultException,
-      ZksnarkException, EventBloomException {
+      ZksnarkException, EventBloomException, BalanceInsufficientException {
     Args.setParam(new String[]{"--witness"}, Constant.TEST_CONF);
     long size = chainManager.getBlockStore().size();
     System.out.print("block store size:" + size + "\n");

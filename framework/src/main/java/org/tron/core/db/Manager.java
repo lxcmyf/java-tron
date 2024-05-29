@@ -836,8 +836,8 @@ public class Manager {
   public boolean pushTransaction(final TransactionCapsule trx)
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
       AccountResourceInsufficientException, DupTransactionException, TaposException,
-      TooBigTransactionException, TransactionExpirationException,
-      ReceiptCheckErrException, VMIllegalException, TooBigTransactionResultException {
+      TooBigTransactionException, TransactionExpirationException, ReceiptCheckErrException,
+      VMIllegalException, TooBigTransactionResultException, BalanceInsufficientException {
 
     if (isShieldedTransaction(trx.getInstance()) && !Args.getInstance()
         .isFullNodeAllowShieldedTransactionArgs()) {
@@ -899,7 +899,7 @@ public class Manager {
   }
 
   public void consumeMultiSignFee(TransactionCapsule trx, TransactionTrace trace)
-      throws AccountResourceInsufficientException {
+      throws AccountResourceInsufficientException, BalanceInsufficientException {
     if (trx.getInstance().getSignatureCount() > 1) {
       long fee = getDynamicPropertiesStore().getMultiSignFee();
 
@@ -918,9 +918,13 @@ public class Manager {
             }
           }
         } catch (BalanceInsufficientException e) {
-          throw new AccountResourceInsufficientException(
-              String.format("account %s insufficient balance[%d] to multiSign",
-                  StringUtil.encode58Check(address), fee));
+          String errorMessage = String.format("account %s insufficient balance[%d] to multiSign",
+              StringUtil.encode58Check(address), fee);
+          if (1 == 1) { // If the proposal is opened
+            throw new BalanceInsufficientException(errorMessage);
+          } else {
+            throw new AccountResourceInsufficientException(errorMessage);
+          }
         }
       }
 
@@ -929,7 +933,7 @@ public class Manager {
   }
 
   public void consumeMemoFee(TransactionCapsule trx, TransactionTrace trace)
-      throws AccountResourceInsufficientException {
+      throws AccountResourceInsufficientException, BalanceInsufficientException {
     if (trx.getInstance().getRawData().getData().isEmpty()) {
       // no memo
       return;
@@ -955,9 +959,13 @@ public class Manager {
           }
         }
       } catch (BalanceInsufficientException e) {
-        throw new AccountResourceInsufficientException(
-            String.format("account %s insufficient balance[%d] to memo fee",
-                StringUtil.encode58Check(address), fee));
+        String errorMessage = String.format("account %s insufficient balance[%d] to memo fee",
+            StringUtil.encode58Check(address), fee);
+        if (1 == 1) {
+          throw new BalanceInsufficientException(errorMessage);
+        } else {
+          throw new AccountResourceInsufficientException(errorMessage);
+        }
       }
     }
 
@@ -1000,7 +1008,7 @@ public class Manager {
       TaposException, ValidateScheduleException, ReceiptCheckErrException,
       VMIllegalException, TooBigTransactionResultException, UnLinkedBlockException,
       NonCommonBlockException, BadNumberBlockException, BadBlockException, ZksnarkException,
-      EventBloomException {
+      EventBloomException, BalanceInsufficientException {
     block.generatedByMyself = true;
     long start = System.currentTimeMillis();
     pushBlock(block);
@@ -1015,7 +1023,7 @@ public class Manager {
       ContractExeException, ValidateSignatureException, AccountResourceInsufficientException,
       TransactionExpirationException, TooBigTransactionException, DupTransactionException,
       TaposException, ValidateScheduleException, ReceiptCheckErrException,
-      VMIllegalException, TooBigTransactionResultException,
+      VMIllegalException, TooBigTransactionResultException, BalanceInsufficientException,
       ZksnarkException, BadBlockException, EventBloomException {
     applyBlock(block, block.getTransactions());
   }
@@ -1025,7 +1033,8 @@ public class Manager {
       AccountResourceInsufficientException, TransactionExpirationException,
       TooBigTransactionException, DupTransactionException, TaposException,
       ValidateScheduleException, ReceiptCheckErrException, VMIllegalException,
-      TooBigTransactionResultException, ZksnarkException, BadBlockException, EventBloomException {
+      TooBigTransactionResultException, ZksnarkException, BadBlockException, EventBloomException,
+      BalanceInsufficientException {
     processBlock(block, txs);
     chainBaseManager.getBlockStore().put(block.getBlockId().getBytes(), block);
     chainBaseManager.getBlockIndexStore().put(block.getBlockId());
@@ -1057,7 +1066,8 @@ public class Manager {
       ValidateScheduleException, AccountResourceInsufficientException, TaposException,
       TooBigTransactionException, TooBigTransactionResultException, DupTransactionException,
       TransactionExpirationException, NonCommonBlockException, ReceiptCheckErrException,
-      VMIllegalException, ZksnarkException, BadBlockException, EventBloomException {
+      VMIllegalException, ZksnarkException, BadBlockException, EventBloomException,
+      BalanceInsufficientException {
 
     MetricsUtil.meterMark(MetricsKey.BLOCKCHAIN_FORK_COUNT);
     Metrics.counterInc(MetricKeys.Counter.BLOCK_FORK, 1, MetricLabels.ALL);
@@ -1114,6 +1124,7 @@ public class Manager {
             | ValidateScheduleException
             | VMIllegalException
             | ZksnarkException
+            | BalanceInsufficientException
             | BadBlockException e) {
           logger.warn(e.getMessage(), e);
           exception = e;
@@ -1140,6 +1151,7 @@ public class Manager {
                 applyBlock(khaosBlock.getBlk().setSwitch(true));
                 tmpSession.commit();
               } catch (AccountResourceInsufficientException
+                  | BalanceInsufficientException
                   | ValidateSignatureException
                   | ContractValidateException
                   | ContractExeException
@@ -1199,7 +1211,7 @@ public class Manager {
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
       UnLinkedBlockException, ValidateScheduleException, AccountResourceInsufficientException,
       TaposException, TooBigTransactionException, TooBigTransactionResultException,
-      DupTransactionException, TransactionExpirationException,
+      DupTransactionException, TransactionExpirationException, BalanceInsufficientException,
       BadNumberBlockException, BadBlockException, NonCommonBlockException,
       ReceiptCheckErrException, VMIllegalException, ZksnarkException, EventBloomException {
     setBlockWaitLock(true);
@@ -1407,7 +1419,8 @@ public class Manager {
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
       AccountResourceInsufficientException, TransactionExpirationException,
       TooBigTransactionException, TooBigTransactionResultException,
-      DupTransactionException, TaposException, ReceiptCheckErrException, VMIllegalException {
+      DupTransactionException, TaposException, ReceiptCheckErrException, VMIllegalException,
+      BalanceInsufficientException {
     if (trxCap == null) {
       return null;
     }
@@ -1707,7 +1720,7 @@ public class Manager {
       AccountResourceInsufficientException, TaposException, TooBigTransactionException,
       DupTransactionException, TransactionExpirationException, ValidateScheduleException,
       ReceiptCheckErrException, VMIllegalException, TooBigTransactionResultException,
-      ZksnarkException, BadBlockException, EventBloomException {
+      ZksnarkException, BadBlockException, EventBloomException, BalanceInsufficientException {
     // todo set revoking db max size.
 
     // checkWitness
@@ -1982,8 +1995,8 @@ public class Manager {
 
     try {
       this.pushTransaction(tx);
-    } catch (ValidateSignatureException | ContractValidateException | ContractExeException
-        | AccountResourceInsufficientException | VMIllegalException e) {
+    } catch (ValidateSignatureException | ContractValidateException | BalanceInsufficientException
+        | AccountResourceInsufficientException | ContractExeException | VMIllegalException e) {
       logger.debug(e.getMessage(), e);
     } catch (DupTransactionException e) {
       logger.debug("Pending manager: dup trans", e);

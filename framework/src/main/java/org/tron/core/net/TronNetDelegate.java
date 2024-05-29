@@ -35,6 +35,7 @@ import org.tron.core.exception.AccountResourceInsufficientException;
 import org.tron.core.exception.BadBlockException;
 import org.tron.core.exception.BadItemException;
 import org.tron.core.exception.BadNumberBlockException;
+import org.tron.core.exception.BalanceInsufficientException;
 import org.tron.core.exception.ContractExeException;
 import org.tron.core.exception.ContractSizeNotEqualToOneException;
 import org.tron.core.exception.ContractValidateException;
@@ -279,6 +280,7 @@ public class TronNetDelegate {
           | UnLinkedBlockException
           | ValidateScheduleException
           | AccountResourceInsufficientException
+          | BalanceInsufficientException
           | TaposException
           | TooBigTransactionException
           | TooBigTransactionResultException
@@ -311,15 +313,16 @@ public class TronNetDelegate {
         | VMIllegalException e) {
       throw new P2pException(TypeEnum.BAD_TRX, e);
     } catch (ContractValidateException
-        | ValidateSignatureException
-        | ContractExeException
-        | DupTransactionException
-        | TaposException
-        | TooBigTransactionException
-        | TransactionExpirationException
-        | ReceiptCheckErrException
-        | TooBigTransactionResultException
-        | AccountResourceInsufficientException e) {
+             | ValidateSignatureException
+             | ContractExeException
+             | DupTransactionException
+             | TaposException
+             | TooBigTransactionException
+             | TransactionExpirationException
+             | ReceiptCheckErrException
+             | TooBigTransactionResultException
+             | AccountResourceInsufficientException
+             | BalanceInsufficientException e) {
       throw new P2pException(TypeEnum.TRX_EXE_FAILED, e);
     }
   }
