@@ -794,7 +794,9 @@ public class Manager {
 
   void validateCommon(TransactionCapsule transactionCapsule)
       throws TransactionExpirationException, TooBigTransactionException {
-    if (!transactionCapsule.isInBlock()) {
+    boolean optimizeTxs = !transactionCapsule.isInBlock() || chainBaseManager
+        .getDynamicPropertiesStore().getAllowOptimizeTxsByConsensus() == 1;
+    if (optimizeTxs) {
       transactionCapsule.removeRedundantRet();
       long generalBytesSize =
           transactionCapsule.getInstance().toBuilder().clearRet().build().getSerializedSize()

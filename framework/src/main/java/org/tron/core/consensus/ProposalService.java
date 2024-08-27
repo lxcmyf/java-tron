@@ -367,6 +367,10 @@ public class ProposalService extends ProposalUtil {
           manager.getDynamicPropertiesStore().saveMaxCreateAccountTxSize(entry.getValue());
           break;
         }
+        case ALLOW_OPTIMIZE_TXS_BY_CONSENSUS: {
+          manager.getDynamicPropertiesStore().saveAllowOptimizeTxsByConsensus(entry.getValue());
+          break;
+        }
         default:
           find = false;
           break;
