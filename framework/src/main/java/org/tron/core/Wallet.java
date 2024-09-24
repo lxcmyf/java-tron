@@ -1343,6 +1343,11 @@ public class Wallet {
         .setValue(dbManager.getDynamicPropertiesStore().getMaxCreateAccountTxSize())
         .build());
 
+    builder.addChainParameter(Protocol.ChainParameters.ChainParameter.newBuilder()
+        .setKey("getProtoRecursionLimit")
+        .setValue(dbManager.getDynamicPropertiesStore().getProtoRecursionLimit())
+        .build());
+
     return builder.build();
   }
 

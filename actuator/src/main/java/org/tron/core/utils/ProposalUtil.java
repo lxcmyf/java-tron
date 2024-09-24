@@ -4,6 +4,8 @@ import static org.tron.core.Constant.CREATE_ACCOUNT_TRANSACTION_MAX_BYTE_SIZE;
 import static org.tron.core.Constant.CREATE_ACCOUNT_TRANSACTION_MIN_BYTE_SIZE;
 import static org.tron.core.Constant.DYNAMIC_ENERGY_INCREASE_FACTOR_RANGE;
 import static org.tron.core.Constant.DYNAMIC_ENERGY_MAX_FACTOR_RANGE;
+import static org.tron.core.Constant.MAX_PROTO_RECURSION_LIMIT;
+import static org.tron.core.Constant.MIN_PROTO_RECURSION_LIMIT;
 import static org.tron.core.config.Parameter.ChainConstant.ONE_YEAR_BLOCK_NUMBERS;
 
 import org.tron.common.utils.ForkController;
@@ -779,6 +781,20 @@ public class ProposalUtil {
         }
         break;
       }
+      case PROTO_RECURSION_LIMIT: {
+        if (!forkController.pass(ForkBlockVersionEnum.VERSION_4_7_6)) {
+          throw new ContractValidateException(
+              "Bad chain parameter id [PROTO_RECURSION_LIMIT]");
+        }
+        if (value < MIN_PROTO_RECURSION_LIMIT
+            || value > MAX_PROTO_RECURSION_LIMIT) {
+          throw new ContractValidateException(
+              "This value[PROTO_RECURSION_LIMIT] is only allowed to be greater than or equal "
+                  + "to " + MIN_PROTO_RECURSION_LIMIT + " and less than or equal to "
+                  + MAX_PROTO_RECURSION_LIMIT + "!");
+        }
+        break;
+      }
       default:
         break;
     }
@@ -857,7 +873,8 @@ public class ProposalUtil {
     MAX_DELEGATE_LOCK_PERIOD(78), // (86400, 10512000]
     ALLOW_OLD_REWARD_OPT(79), // 0, 1
     ALLOW_ENERGY_ADJUSTMENT(81), // 0, 1
-    MAX_CREATE_ACCOUNT_TX_SIZE(82); // [500, 10000]
+    MAX_CREATE_ACCOUNT_TX_SIZE(82), // [500, 10000]
+    PROTO_RECURSION_LIMIT(85); // [10, 100]
 
     private long code;
 

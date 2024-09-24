@@ -222,6 +222,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   private static final byte[] ALLOW_ENERGY_ADJUSTMENT = "ALLOW_ENERGY_ADJUSTMENT".getBytes();
 
   private static final byte[] MAX_CREATE_ACCOUNT_TX_SIZE = "MAX_CREATE_ACCOUNT_TX_SIZE".getBytes();
+  private static final byte[] PROTO_RECURSION_LIMIT = "PROTO_RECURSION_LIMIT".getBytes();
 
   @Autowired
   private DynamicPropertiesStore(@Value("properties") String dbName) {
@@ -2875,6 +2876,18 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElse(CommonParameter.getInstance().getMaxCreateAccountTxSize());
+  }
+
+  public void saveProtoRecursionLimit(long protoRecursionLimit) {
+    this.put(PROTO_RECURSION_LIMIT,
+        new BytesCapsule(ByteArray.fromLong(protoRecursionLimit)));
+  }
+
+  public long getProtoRecursionLimit() {
+    return Optional.ofNullable(getUnchecked(PROTO_RECURSION_LIMIT))
+        .map(BytesCapsule::getData)
+        .map(ByteArray::toLong)
+        .orElse(CommonParameter.getInstance().getProtoRecursionLimit());
   }
 
   private static class DynamicResourceProperties {

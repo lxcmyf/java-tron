@@ -28,6 +28,8 @@ public class Constant {
   public static final long TRANSACTION_MAX_BYTE_SIZE = 500 * 1_024L;
   public static final int CREATE_ACCOUNT_TRANSACTION_MIN_BYTE_SIZE = 500;
   public static final int CREATE_ACCOUNT_TRANSACTION_MAX_BYTE_SIZE = 10000;
+  public static final int MAX_PROTO_RECURSION_LIMIT = 100;
+  public static final int MIN_PROTO_RECURSION_LIMIT = 10;
   public static final long MAXIMUM_TIME_UNTIL_EXPIRATION = 24 * 60 * 60 * 1_000L; //one day
   public static final long TRANSACTION_DEFAULT_EXPIRATION_TIME = 60 * 1_000L; //60 seconds
   public static final long TRANSACTION_FEE_POOL_PERIOD = 1; //1 blocks

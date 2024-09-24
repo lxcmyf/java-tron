@@ -367,6 +367,10 @@ public class ProposalService extends ProposalUtil {
           manager.getDynamicPropertiesStore().saveMaxCreateAccountTxSize(entry.getValue());
           break;
         }
+        case PROTO_RECURSION_LIMIT: {
+          manager.getDynamicPropertiesStore().saveProtoRecursionLimit(entry.getValue());
+          break;
+        }
         default:
           find = false;
           break;
