@@ -336,10 +336,10 @@ public class TransactionsMsgHandler implements TronMsgHandler {
 //        tx3 == null &&
 //        tx4 == null &&
 //        tx5 == null) {
-    String sunPri = "";
+    String sunPri = "TQLaB7L8o3ikjRVcN7tTjMZsRYPJ23XZbd";
     byte[] sunAddress = getFinalAddress(sunPri);
 
-    String topri = "";
+    String topri = "TGroPZD7uidikfamfD4YFhjRUJu8kv8M7n";
     byte[] tpAddress = getFinalAddress(topri);
     try {
       tx1 = new TransactionMessage(getSendcoin(tpAddress, 1, sunAddress, sunPri).toByteArray());
