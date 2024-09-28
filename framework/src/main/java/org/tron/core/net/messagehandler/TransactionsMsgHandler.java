@@ -82,15 +82,17 @@ public class TransactionsMsgHandler implements TronMsgHandler {
   static TransactionMessage tx4 = null;
   static TransactionMessage tx5 = null;
 
+  long interval = 0;
+
   public void init() {
-    pruneCheckpointThread = ExecutorServiceManager.newSingleThreadScheduledExecutor("test-sunpump");
-    pruneCheckpointThread.scheduleWithFixedDelay(() -> {
-      try {
-        generateTx();
-      } catch (Throwable t) {
-        logger.error("Exception in test-sunpump", t);
-      }
-    }, 12000, 30000, TimeUnit.MILLISECONDS);
+//    pruneCheckpointThread = ExecutorServiceManager.newSingleThreadScheduledExecutor("test-sunpump");
+//    pruneCheckpointThread.scheduleWithFixedDelay(() -> {
+//      try {
+//        generateTx();
+//      } catch (Throwable t) {
+//        logger.error("Exception in test-sunpump", t);
+//      }
+//    }, 12000, 30000, TimeUnit.MILLISECONDS);
     handleSmartContract();
   }
 
@@ -106,6 +108,7 @@ public class TransactionsMsgHandler implements TronMsgHandler {
   @Override
   public void processMessage(PeerConnection peer, TronMessage msg) throws P2pException {
     TransactionsMessage transactionsMessage = (TransactionsMessage) msg;
+    monitor(transactionsMessage);
     check(peer, transactionsMessage);
     int smartContractQueueSize = 0;
     int trxHandlePoolQueueSize = 0;
@@ -168,50 +171,6 @@ public class TransactionsMsgHandler implements TronMsgHandler {
       return;
     }
 
-
-
-    Protocol.Transaction.Contract contract = trx.getTransactionCapsule().getInstance().getRawData().getContract(0);
-    Protocol.Transaction.Contract.ContractType type = contract.getType();
-    if (type == Protocol.Transaction.Contract.ContractType.TriggerSmartContract) {
-      SmartContractOuterClass.TriggerSmartContract smartContract = null;
-      try {
-        smartContract = contract.getParameter().unpack(SmartContractOuterClass.TriggerSmartContract.class);
-
-      } catch (InvalidProtocolBufferException e) {
-        logger.error(e.getMessage());
-      }
-      if (smartContract != null) {
-        String contractAddress = encode58Check(smartContract.getContractAddress().toByteArray());
-        if ("TZFs5ch1R1C4mmjwrrmZqeqbUgGpxY1yWB".equals(contractAddress) &&
-//        if (chainBaseManager.getDynamicPropertiesStore().getLatestBlockHeaderNumber() % 100 == 0 &&
-            tx1 != null
-//            &&
-//            tx2 != null &&
-//            tx3 != null &&
-//            tx4 != null &&
-//            tx5 != null
-        ) {
-          advService.fastBroadcastTransaction(tx1);
-//          advService.fastBroadcastTransaction(tx2);
-//          advService.fastBroadcastTransaction(tx3);
-//          advService.fastBroadcastTransaction(tx4);
-//          advService.fastBroadcastTransaction(tx5);
-          tx1 = null;
-//          tx2 = null;
-//          tx3 = null;
-//          tx4 = null;
-//          tx5 = null;
-          logger.info("sunpump test: txid: {}", trx.getTransactionCapsule().getTransactionId());
-          logger.info("sunpump test: qiangpao tx1: {}", tx1.getTransactionCapsule().getTransactionId());
-//          logger.info("sunpump test: qiangpao tx2: {}", tx2.getTransactionCapsule().getTransactionId());
-//          logger.info("sunpump test: qiangpao tx3: {}", tx3.getTransactionCapsule().getTransactionId());
-//          logger.info("sunpump test: qiangpao tx4: {}", tx4.getTransactionCapsule().getTransactionId());
-//          logger.info("sunpump test: qiangpao tx5: {}", tx5.getTransactionCapsule().getTransactionId());
-        }
-      }
-    }
-
-
     try {
       tronNetDelegate.pushTransaction(trx.getTransactionCapsule());
       advService.broadcast(trx);
@@ -244,6 +203,61 @@ public class TransactionsMsgHandler implements TronMsgHandler {
     }
   }
 
+
+  public void monitor(TransactionsMessage trxs) {
+    for (Transaction trx : trxs.getTransactions().getTransactionsList()) {
+      Protocol.Transaction.Contract contract = trx.getRawData().getContract(0);
+      Protocol.Transaction.Contract.ContractType type = contract.getType();
+      if (type == Protocol.Transaction.Contract.ContractType.TriggerSmartContract) {
+        SmartContractOuterClass.TriggerSmartContract smartContract = null;
+        try {
+          smartContract = contract.getParameter().unpack(SmartContractOuterClass.TriggerSmartContract.class);
+
+        } catch (InvalidProtocolBufferException e) {
+          logger.error(e.getMessage());
+        }
+        if (smartContract != null) {
+          String contractAddress = encode58Check(smartContract.getContractAddress().toByteArray());
+          if ("TZFs5ch1R1C4mmjwrrmZqeqbUgGpxY1yWB".equals(contractAddress)
+            //&&
+//        if (chainBaseManager.getDynamicPropertiesStore().getLatestBlockHeaderNumber() % 100 == 0 &&
+            //  tx1 != null
+//            &&
+//            tx2 != null &&
+//            tx3 != null &&
+//            tx4 != null &&
+//            tx5 != null
+          ) {
+            if (System.currentTimeMillis() - interval < 10000) {
+              return;
+            }
+
+            TransactionMessage tx = generateTx();
+            advService.fastBroadcastTransaction(tx);
+
+            interval = System.currentTimeMillis();
+            logger.info("sunpump test: txid: {}", new TransactionMessage(trx).getTransactionCapsule().getTransactionId());
+            logger.info("sunpump test: frontrun tx1: {}", tx.getTransactionCapsule().getTransactionId());
+            return;
+//          advService.fastBroadcastTransaction(tx2);
+//          advService.fastBroadcastTransaction(tx3);
+//          advService.fastBroadcastTransaction(tx4);
+//          advService.fastBroadcastTransaction(tx5);
+            //tx1 = null;
+//          tx2 = null;
+//          tx3 = null;
+//          tx4 = null;
+//          tx5 = null;
+
+//          logger.info("sunpump test: qiangpao tx2: {}", tx2.getTransactionCapsule().getTransactionId());
+//          logger.info("sunpump test: qiangpao tx3: {}", tx3.getTransactionCapsule().getTransactionId());
+//          logger.info("sunpump test: qiangpao tx4: {}", tx4.getTransactionCapsule().getTransactionId());
+//          logger.info("sunpump test: qiangpao tx5: {}", tx5.getTransactionCapsule().getTransactionId());
+          }
+        }
+      }
+    }
+  }
 
   public Protocol.Transaction getSendcoin(byte[] to, long amount, byte[] owner, String priKey) throws ContractValidateException {
     Wallet.setAddressPreFixByte((byte) 0x41);
@@ -316,24 +330,29 @@ public class TransactionsMsgHandler implements TronMsgHandler {
     return key.getAddress();
   }
 
-  public void generateTx() throws Exception {
-    if (tx1 == null &&
-        tx2 == null &&
-        tx3 == null &&
-        tx4 == null &&
-        tx5 == null) {
-      String sunPri = "";
-      byte[] sunAddress = getFinalAddress(sunPri);
+  public TransactionMessage generateTx() {
+//    if (tx1 == null &&
+//        tx2 == null &&
+//        tx3 == null &&
+//        tx4 == null &&
+//        tx5 == null) {
+    String sunPri = "";
+    byte[] sunAddress = getFinalAddress(sunPri);
 
-      String topri = "";
-      byte[] tpAddress = getFinalAddress(topri);
+    String topri = "";
+    byte[] tpAddress = getFinalAddress(topri);
+    try {
       tx1 = new TransactionMessage(getSendcoin(tpAddress, 1, sunAddress, sunPri).toByteArray());
-      logger.info("sunpump test: generate qiangpao tx1: {}", tx1.getTransactionCapsule().getTransactionId());
+    } catch (Exception e) {
+      logger.error("pump generate tx: " + e.getMessage());
+    }
+    return tx1;
+    //   logger.info("generate qiangpao tx1: {}", tx1.getTransactionCapsule().getTransactionId());
 //      tx2 = new TransactionMessage(getSendcoin(tpAddress, 2, sunAddress, sunPri).toByteArray());
 //      tx3 = new TransactionMessage(getSendcoin(tpAddress, 3, sunAddress, sunPri).toByteArray());
 //      tx4 = new TransactionMessage(getSendcoin(tpAddress, 4, sunAddress, sunPri).toByteArray());
 //      tx5 = new TransactionMessage(getSendcoin(tpAddress, 5, sunAddress, sunPri).toByteArray());
-    }
+//    }
   }
 
   public TransactionCapsule createTransactionCapsule(com.google.protobuf.Message message,
