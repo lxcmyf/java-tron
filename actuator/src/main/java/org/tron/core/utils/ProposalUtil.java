@@ -779,6 +779,21 @@ public class ProposalUtil {
         }
         break;
       }
+      case ALLOW_OPTIMIZE_TXS_BY_CONSENSUS: {
+        if (!forkController.pass(ForkBlockVersionEnum.VERSION_4_8_0)) {
+          throw new ContractValidateException(
+              "Bad chain parameter id [ALLOW_OPTIMIZE_TXS_BY_CONSENSUS]");
+        }
+        if (dynamicPropertiesStore.getAllowOptimizeTxsByConsensus() == 1) {
+          throw new ContractValidateException(
+              "[ALLOW_OPTIMIZE_TXS_BY_CONSENSUS] has been valid, no need to propose again");
+        }
+        if (value != 1) {
+          throw new ContractValidateException(
+              "This value[ALLOW_OPTIMIZE_TXS_BY_CONSENSUS] is only allowed to be 1");
+        }
+        break;
+      }
       default:
         break;
     }
@@ -857,7 +872,8 @@ public class ProposalUtil {
     MAX_DELEGATE_LOCK_PERIOD(78), // (86400, 10512000]
     ALLOW_OLD_REWARD_OPT(79), // 0, 1
     ALLOW_ENERGY_ADJUSTMENT(81), // 0, 1
-    MAX_CREATE_ACCOUNT_TX_SIZE(82); // [500, 10000]
+    MAX_CREATE_ACCOUNT_TX_SIZE(82), // [500, 10000]
+    ALLOW_OPTIMIZE_TXS_BY_CONSENSUS(85); // 0, 1
 
     private long code;
 

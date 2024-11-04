@@ -222,6 +222,8 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
   private static final byte[] ALLOW_ENERGY_ADJUSTMENT = "ALLOW_ENERGY_ADJUSTMENT".getBytes();
 
   private static final byte[] MAX_CREATE_ACCOUNT_TX_SIZE = "MAX_CREATE_ACCOUNT_TX_SIZE".getBytes();
+  private static final byte[] ALLOW_OPTIMIZE_TXS_BY_CONSENSUS = "ALLOW_OPTIMIZE_TXS_BY_CONSENSUS"
+      .getBytes();
 
   @Autowired
   private DynamicPropertiesStore(@Value("properties") String dbName) {
@@ -2875,6 +2877,18 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
         .map(BytesCapsule::getData)
         .map(ByteArray::toLong)
         .orElse(CommonParameter.getInstance().getMaxCreateAccountTxSize());
+  }
+
+  public void saveAllowOptimizeTxsByConsensus(long allowOptimizeTxsByConsensus) {
+    this.put(ALLOW_OPTIMIZE_TXS_BY_CONSENSUS, new BytesCapsule(ByteArray
+        .fromLong(allowOptimizeTxsByConsensus)));
+  }
+
+  public long getAllowOptimizeTxsByConsensus() {
+    return Optional.ofNullable(getUnchecked(ALLOW_OPTIMIZE_TXS_BY_CONSENSUS))
+        .map(BytesCapsule::getData)
+        .map(ByteArray::toLong)
+        .orElse(CommonParameter.getInstance().getAllowOptimizeTxsByConsensus());
   }
 
   private static class DynamicResourceProperties {
