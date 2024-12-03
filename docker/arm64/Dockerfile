@@ -23,7 +23,7 @@ RUN set -o errexit -o nounset \
 
 RUN wget -P $BASE_DIR/config https://raw.githubusercontent.com/tronprotocol/tron-deployment/master/main_net_config.conf
 
-COPY ../docker-entrypoint.sh $BASE_DIR/bin
+COPY docker-entrypoint.sh $BASE_DIR/bin
 
 WORKDIR $BASE_DIR
 
