@@ -5,7 +5,7 @@ ENV BASE_DIR="/java-tron"
 
 
 RUN set -o errexit -o nounset \
-    && yum -y install git p7zip p7zip-plugins wget \
+    && yum -y install git unzip wget \
     && echo "git clone" \
     && mkdir -p $TMP_DIR \
     && cd $TMP_DIR \
@@ -14,7 +14,7 @@ RUN set -o errexit -o nounset \
     && git checkout arm64 \
     && ./gradlew build -x test \
     && cd build/distributions \
-    && 7za x -y java-tron-1.0.0.zip  \
+    && unzip java-tron-1.0.0.zip  \
     && mv java-tron-1.0.0 $BASE_DIR \
     && rm -rf $TMP_DIR \
     && rm -rf ~/.gradle \
