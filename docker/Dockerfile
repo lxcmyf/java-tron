@@ -2,6 +2,7 @@ FROM amazoncorretto:17.0.13
 
 ENV TMP_DIR="/tron-build"
 ENV BASE_DIR="/java-tron"
+ENV UNZIP_DISABLE_ZIPBOMB_DETECTION=TRUE
 
 
 RUN set -o errexit -o nounset \
