@@ -15,7 +15,7 @@ RUN set -o errexit -o nounset \
     && git checkout arm64 \
     && ./gradlew build -x test \
     && cd build/distributions \
-    && unzip java-tron-1.0.0.zip  \
+    && unzip -o java-tron-1.0.0.zip  \
     && mv java-tron-1.0.0 $BASE_DIR \
     && rm -rf $TMP_DIR \
     && rm -rf ~/.gradle \
