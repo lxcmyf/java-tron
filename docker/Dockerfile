@@ -5,7 +5,7 @@ ENV BASE_DIR="/java-tron"
 
 
 RUN set -o errexit -o nounset \
-    && yum -y install git p7zip \
+    && yum -y install git wget p7zip \
     && echo "git clone" \
     && mkdir -p $TMP_DIR \
     && cd $TMP_DIR \
