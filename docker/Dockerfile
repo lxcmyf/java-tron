@@ -5,6 +5,7 @@ ENV BASE_DIR="/java-tron"
 
 
 RUN set -o errexit -o nounset \
+    && yum -y install git \
     && echo "git clone" \
     && mkdir -p $TMP_DIR \
     && cd $TMP_DIR \
