@@ -1,7 +1,7 @@
 apply plugin: 'com.google.protobuf'
 
 def protobufVersion = '3.25.5'
-def grpcVersion = '1.52.1'
+def grpcVersion = '1.60.0'
 
 dependencies {
     api group: 'com.google.protobuf', name: 'protobuf-java', version: protobufVersion
@@ -20,7 +20,7 @@ dependencies {
     api group: 'com.google.api.grpc', name: 'proto-google-common-protos', version: '2.15.0'
 }
 
-tasks.matching { it instanceof Test }.all {
+tasks.matching { it instanceof Test }.configureEach {
     testLogging.events = ["failed", "passed", "skipped"]
 }
 

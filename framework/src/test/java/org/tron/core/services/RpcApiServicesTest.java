@@ -135,9 +135,14 @@ public class RpcApiServicesTest {
     Args.setParam(new String[]{"-d", temporaryFolder.newFolder().toString()}, Constant.TEST_CONF);
     String OWNER_ADDRESS = Wallet.getAddressPreFixString()
         + "548794500882809695a8a687866e76d4271a1abc";
+    getInstance().setRpcEnable(true);
     getInstance().setRpcPort(PublicMethod.chooseRandomPort());
+    getInstance().setRpcSolidityEnable(true);
     getInstance().setRpcOnSolidityPort(PublicMethod.chooseRandomPort());
+    getInstance().setRpcPBFTEnable(true);
     getInstance().setRpcOnPBFTPort(PublicMethod.chooseRandomPort());
+    getInstance().setMetricsPrometheusPort(PublicMethod.chooseRandomPort());
+    getInstance().setMetricsPrometheusEnable(true);
     String fullNode = String.format("%s:%d", getInstance().getNodeLanIp(),
         getInstance().getRpcPort());
     String solidityNode = String.format("%s:%d", getInstance().getNodeLanIp(),

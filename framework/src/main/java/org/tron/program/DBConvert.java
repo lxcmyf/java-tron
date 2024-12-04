@@ -1,6 +1,7 @@
 package org.tron.program;
 
 import static org.fusesource.leveldbjni.JniDBFactory.factory;
+import static org.tron.common.math.StrictMathWrapper.max;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -86,13 +87,6 @@ public class DBConvert implements Callable<Boolean> {
     dbOptions.cacheSize(10 * 1024 * 1024L);
     dbOptions.maxOpenFiles(1000);
     return dbOptions;
-  }
-
-  public static void main(String[] args) {
-    int code = run(args);
-    logger.info("exit code {}.", code);
-    System.out.printf("exit code %d.\n", code);
-    System.exit(code);
   }
 
   public static int run(String[] args) {
@@ -190,7 +184,7 @@ public class DBConvert implements Callable<Boolean> {
     options.setTargetFileSizeBase(64 * 1024 * 1024);
     options.setTargetFileSizeMultiplier(1);
     options.setMaxBytesForLevelBase(512 * 1024 * 1024);
-    options.setMaxBackgroundCompactions(Math.max(1, Runtime.getRuntime().availableProcessors()));
+    options.setMaxBackgroundCompactions(max(1, Runtime.getRuntime().availableProcessors()));
     options.setLevel0FileNumCompactionTrigger(4);
     options.setLevelCompactionDynamicLevelBytes(true);
     if ("market_pair_price_to_order".equalsIgnoreCase(this.dbName)) {

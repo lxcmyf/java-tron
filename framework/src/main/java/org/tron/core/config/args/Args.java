@@ -1,7 +1,8 @@
 package org.tron.core.config.args;
 
-import static java.lang.Math.max;
 import static java.lang.System.exit;
+import static org.tron.common.math.StrictMathWrapper.max;
+import static org.tron.common.math.StrictMathWrapper.min;
 import static org.tron.core.Constant.ADD_PRE_FIX_BYTE_MAINNET;
 import static org.tron.core.Constant.DYNAMIC_ENERGY_INCREASE_FACTOR_RANGE;
 import static org.tron.core.Constant.DYNAMIC_ENERGY_MAX_FACTOR_RANGE;
@@ -50,6 +51,8 @@ import org.tron.common.args.GenesisBlock;
 import org.tron.common.args.Witness;
 import org.tron.common.config.DbBackupConfig;
 import org.tron.common.crypto.SignInterface;
+import org.tron.common.exit.ExitManager;
+import org.tron.common.exit.ExitReason;
 import org.tron.common.logsfilter.EventPluginConfig;
 import org.tron.common.logsfilter.FilterQuery;
 import org.tron.common.logsfilter.TriggerConfig;
@@ -167,6 +170,8 @@ public class Args extends CommonParameter {
     PARAMETER.tcpNettyWorkThreadNum = 0;
     PARAMETER.udpNettyWorkThreadNum = 0;
     PARAMETER.solidityNode = false;
+    PARAMETER.keystore = false;
+    PARAMETER.dbConvert = false;
     PARAMETER.trustNodeAddr = "";
     PARAMETER.walletExtensionApi = false;
     PARAMETER.estimateEnergy = false;
@@ -191,8 +196,12 @@ public class Args extends CommonParameter {
     PARAMETER.validContractProtoThreadNum = 1;
     PARAMETER.shieldedTransInPendingMaxCounts = 10;
     PARAMETER.changedDelegation = 0;
+    PARAMETER.rpcEnable = true;
+    PARAMETER.rpcSolidityEnable = true;
+    PARAMETER.rpcPBFTEnable = true;
     PARAMETER.fullNodeHttpEnable = true;
     PARAMETER.solidityNodeHttpEnable = true;
+    PARAMETER.pBFTHttpEnable = true;
     PARAMETER.jsonRpcHttpFullNodeEnable = false;
     PARAMETER.jsonRpcHttpSolidityNodeEnable = false;
     PARAMETER.jsonRpcHttpPBFTNodeEnable = false;
@@ -254,14 +263,15 @@ public class Args extends CommonParameter {
     } catch (IOException e) {
       logger.error(e.getMessage());
     }
-    JCommander.getConsole().println("OS : " + System.getProperty("os.name"));
-    JCommander.getConsole().println("JVM : " + System.getProperty("java.vendor") + " "
+    JCommander jCommander = JCommander.newBuilder().build();
+    jCommander.getConsole().println("OS : " + System.getProperty("os.name"));
+    jCommander.getConsole().println("JVM : " + System.getProperty("java.vendor") + " "
         + System.getProperty("java.version") + " " + System.getProperty("os.arch"));
     if (!noGitProperties) {
-      JCommander.getConsole().println("Git : " + properties.getProperty("git.commit.id"));
+      jCommander.getConsole().println("Git : " + properties.getProperty("git.commit.id"));
     }
-    JCommander.getConsole().println("Version : " + Version.getVersion());
-    JCommander.getConsole().println("Code : " + Version.VERSION_CODE);
+    jCommander.getConsole().println("Version : " + Version.getVersion());
+    jCommander.getConsole().println("Code : " + Version.VERSION_CODE);
   }
 
   public static void printHelp(JCommander jCommander) {
@@ -305,7 +315,7 @@ public class Args extends CommonParameter {
         helpStr.append(tmpOptionDesc);
       }
     }
-    JCommander.getConsole().println(helpStr.toString());
+    jCommander.getConsole().println(helpStr.toString());
   }
 
   public static String upperFirst(String name) {
@@ -357,13 +367,20 @@ public class Args extends CommonParameter {
    * set parameters.
    */
   public static void setParam(final String[] args, final String confFileName) {
+    Config config = Configuration.getByFileName(PARAMETER.shellConfFileName, confFileName);
+    setParam(args, config);
+  }
+
+  /**
+   * set parameters.
+   */
+  public static void setParam(final String[] args, final Config config) {
+
     JCommander.newBuilder().addObject(PARAMETER).build().parse(args);
     if (PARAMETER.version) {
       printVersion();
-      exit(0);
+      ExitManager.getInstance().exit(ExitReason.NORMAL_SHUTDOWN);
     }
-
-    Config config = Configuration.getByFileName(PARAMETER.shellConfFileName, confFileName);
 
     if (config.hasPath(Constant.NET_TYPE)
         && Constant.TESTNET.equalsIgnoreCase(config.getString(Constant.NET_TYPE))) {
@@ -421,9 +438,8 @@ public class Args extends CommonParameter {
             String prikey = ByteArray.toHexString(sign.getPrivateKey());
             privateKeys.add(prikey);
           } catch (IOException | CipherException e) {
-            logger.error(e.getMessage());
-            logger.error("Witness node start failed!");
-            exit(-1);
+            ExitManager.getInstance().exit(ExitReason.INITIALIZATION_ERROR,
+                "Witness node start failed!", e);
           }
         }
       }
@@ -451,12 +467,28 @@ public class Args extends CommonParameter {
       PARAMETER.lruCacheSize = config.getInt(Constant.VM_LRU_CACHE_SIZE);
     }
 
+    if (config.hasPath(Constant.NODE_RPC_ENABLE)) {
+      PARAMETER.rpcEnable = config.getBoolean(Constant.NODE_RPC_ENABLE);
+    }
+
+    if (config.hasPath(Constant.NODE_RPC_SOLIDITY_ENABLE)) {
+      PARAMETER.rpcSolidityEnable = config.getBoolean(Constant.NODE_RPC_SOLIDITY_ENABLE);
+    }
+
+    if (config.hasPath(Constant.NODE_RPC_PBFT_ENABLE)) {
+      PARAMETER.rpcPBFTEnable = config.getBoolean(Constant.NODE_RPC_PBFT_ENABLE);
+    }
+
     if (config.hasPath(Constant.NODE_HTTP_FULLNODE_ENABLE)) {
       PARAMETER.fullNodeHttpEnable = config.getBoolean(Constant.NODE_HTTP_FULLNODE_ENABLE);
     }
 
     if (config.hasPath(Constant.NODE_HTTP_SOLIDITY_ENABLE)) {
       PARAMETER.solidityNodeHttpEnable = config.getBoolean(Constant.NODE_HTTP_SOLIDITY_ENABLE);
+    }
+
+    if (config.hasPath(Constant.NODE_HTTP_PBFT_ENABLE)) {
+      PARAMETER.pBFTHttpEnable = config.getBoolean(Constant.NODE_HTTP_PBFT_ENABLE);
     }
 
     if (config.hasPath(Constant.NODE_JSONRPC_HTTP_FULLNODE_ENABLE)) {
@@ -1134,8 +1166,8 @@ public class Args extends CommonParameter {
 
     if (config.hasPath(Constant.ALLOW_DELEGATE_OPTIMIZATION)) {
       PARAMETER.allowDelegateOptimization = config.getLong(Constant.ALLOW_DELEGATE_OPTIMIZATION);
-      PARAMETER.allowDelegateOptimization = Math.min(PARAMETER.allowDelegateOptimization, 1);
-      PARAMETER.allowDelegateOptimization = Math.max(PARAMETER.allowDelegateOptimization, 0);
+      PARAMETER.allowDelegateOptimization = min(PARAMETER.allowDelegateOptimization, 1);
+      PARAMETER.allowDelegateOptimization = max(PARAMETER.allowDelegateOptimization, 0);
     }
 
     if (config.hasPath(Constant.COMMITTEE_UNFREEZE_DELAY_DAYS)) {
@@ -1150,33 +1182,31 @@ public class Args extends CommonParameter {
 
     if (config.hasPath(Constant.ALLOW_DYNAMIC_ENERGY)) {
       PARAMETER.allowDynamicEnergy = config.getLong(Constant.ALLOW_DYNAMIC_ENERGY);
-      PARAMETER.allowDynamicEnergy = Math.min(PARAMETER.allowDynamicEnergy, 1);
-      PARAMETER.allowDynamicEnergy = Math.max(PARAMETER.allowDynamicEnergy, 0);
+      PARAMETER.allowDynamicEnergy = min(PARAMETER.allowDynamicEnergy, 1);
+      PARAMETER.allowDynamicEnergy = max(PARAMETER.allowDynamicEnergy, 0);
     }
 
     if (config.hasPath(Constant.DYNAMIC_ENERGY_THRESHOLD)) {
       PARAMETER.dynamicEnergyThreshold = config.getLong(Constant.DYNAMIC_ENERGY_THRESHOLD);
       PARAMETER.dynamicEnergyThreshold
-          = Math.min(PARAMETER.dynamicEnergyThreshold, 100_000_000_000_000_000L);
-      PARAMETER.dynamicEnergyThreshold = Math.max(PARAMETER.dynamicEnergyThreshold, 0);
+          = min(PARAMETER.dynamicEnergyThreshold, 100_000_000_000_000_000L);
+      PARAMETER.dynamicEnergyThreshold = max(PARAMETER.dynamicEnergyThreshold, 0);
     }
 
     if (config.hasPath(Constant.DYNAMIC_ENERGY_INCREASE_FACTOR)) {
       PARAMETER.dynamicEnergyIncreaseFactor
           = config.getLong(Constant.DYNAMIC_ENERGY_INCREASE_FACTOR);
       PARAMETER.dynamicEnergyIncreaseFactor =
-          Math.min(PARAMETER.dynamicEnergyIncreaseFactor, DYNAMIC_ENERGY_INCREASE_FACTOR_RANGE);
-      PARAMETER.dynamicEnergyIncreaseFactor =
-          Math.max(PARAMETER.dynamicEnergyIncreaseFactor, 0);
+          min(PARAMETER.dynamicEnergyIncreaseFactor, DYNAMIC_ENERGY_INCREASE_FACTOR_RANGE);
+      PARAMETER.dynamicEnergyIncreaseFactor = max(PARAMETER.dynamicEnergyIncreaseFactor, 0);
     }
 
     if (config.hasPath(Constant.DYNAMIC_ENERGY_MAX_FACTOR)) {
       PARAMETER.dynamicEnergyMaxFactor
           = config.getLong(Constant.DYNAMIC_ENERGY_MAX_FACTOR);
       PARAMETER.dynamicEnergyMaxFactor =
-          Math.min(PARAMETER.dynamicEnergyMaxFactor, DYNAMIC_ENERGY_MAX_FACTOR_RANGE);
-      PARAMETER.dynamicEnergyMaxFactor =
-          Math.max(PARAMETER.dynamicEnergyMaxFactor, 0);
+          min(PARAMETER.dynamicEnergyMaxFactor, DYNAMIC_ENERGY_MAX_FACTOR_RANGE);
+      PARAMETER.dynamicEnergyMaxFactor = max(PARAMETER.dynamicEnergyMaxFactor, 0);
     }
 
     PARAMETER.dynamicConfigEnable = config.hasPath(Constant.DYNAMIC_CONFIG_ENABLE)

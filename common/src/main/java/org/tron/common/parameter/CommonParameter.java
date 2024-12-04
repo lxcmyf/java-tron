@@ -199,7 +199,20 @@ public class CommonParameter {
   //If you are running a solidity node for java tron, this flag is set to true
   @Getter
   @Setter
+  @Parameter(names = {"--solidity"}, description = "running a solidity node for java tron")
   public boolean solidityNode = false;
+  //If you are running KeystoreFactory, this flag is set to true
+  @Getter
+  @Setter
+  @Parameter(names = {"--keystore"}, description = "running KeystoreFactory")
+  public boolean keystore = false;
+
+  //If you are running leveldb to rocksdb convert tool, this flag is set to true
+  @Getter
+  @Setter
+  @Parameter(names = {"--db-convert"}, description = "running leveldb to rocksdb convert")
+  public boolean dbConvert = false;
+
   @Getter
   @Setter
   public int rpcPort;
@@ -456,12 +469,30 @@ public class CommonParameter {
   @Getter
   @Setter
   public String cryptoEngine = Constant.ECKey_ENGINE;
+
+  @Getter
+  @Setter
+  public boolean rpcEnable = true;
+
+  @Getter
+  @Setter
+  public boolean rpcSolidityEnable = true;
+
+  @Getter
+  @Setter
+  public boolean rpcPBFTEnable = true;
+
   @Getter
   @Setter
   public boolean fullNodeHttpEnable = true;
   @Getter
   @Setter
   public boolean solidityNodeHttpEnable = true;
+
+  @Getter
+  @Setter
+  public boolean pBFTHttpEnable = true;
+
   @Getter
   @Setter
   public boolean jsonRpcHttpFullNodeEnable = false;
