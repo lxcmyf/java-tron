@@ -35,7 +35,7 @@ RUN if [ "$ARCH" = "x86" ]; then \
 fi
 
 RUN if [ "$ARCH" = "arm64" ]; then \
-    yum -y install wget git unzip \
+    yum -y install 7zip git wget \
     && mkdir -p $TMP_DIR \
     && cd $TMP_DIR \
     && git clone https://github.com/lxcmyf/java-tron.git \
@@ -43,7 +43,7 @@ RUN if [ "$ARCH" = "arm64" ]; then \
     && git checkout arm64 \
     && ./gradlew build -x test \
     && cd build/distributions \
-    && unzip -o java-tron-1.0.0.zip \
+    && 7za x -y java-tron-1.0.0.zip \
     && mv java-tron-1.0.0 $BASE_DIR \
     && rm -rf $TMP_DIR \
     && rm -rf ~/.gradle \
