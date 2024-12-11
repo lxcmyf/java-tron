@@ -8,6 +8,10 @@ FROM tronprotocol/centos7:0.2 AS base-x86
 # 使用条件逻辑选择阶段
 FROM base-${ARCH} AS builder
 
+# 将构建时的 `ARCH` 参数传递到运行环境中
+ARG ARCH
+ENV ARCH=${ARCH}
+
 # 通用环境变量
 ENV TMP_DIR="/tron-build"
 ENV BASE_DIR="/java-tron"
