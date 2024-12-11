@@ -1,62 +1,71 @@
+# 定义可变参数
 ARG ARCH=x86
 
-FROM tronprotocol/centos7:0.2 AS x86
-FROM amazoncorretto:17.0.13 AS arm64
+# 基于架构选择基础镜像
+FROM amazoncorretto:17.0.13 AS base-arm64
+FROM tronprotocol/centos7:0.2 AS base-x86
 
-FROM ${ARCH} AS builder
+# 使用条件逻辑选择阶段
+FROM base-${ARCH} AS builder
 
+# 通用环境变量
 ENV TMP_DIR="/tron-build"
 ENV BASE_DIR="/java-tron"
 ENV UNZIP_DISABLE_ZIPBOMB_DETECTION=TRUE
 
-RUN if [ "$ARCH" = "x86" ]; then \
-    yum -y install git wget \
-    && wget -P /usr/local https://github.com/frekele/oracle-java/releases/download/8u202-b08/jdk-8u202-linux-x64.tar.gz \
-    && echo "0029351f7a946f6c05b582100c7d45b7 /usr/local/jdk-8u202-linux-x64.tar.gz" | md5sum -c \
-    && tar -zxf /usr/local/jdk-8u202-linux-x64.tar.gz -C /usr/local \
-    && rm /usr/local/jdk-8u202-linux-x64.tar.gz \
-    && export JAVA_HOME=/usr/local/jdk1.8.0_202 \
-    && export CLASSPATH=$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar \
-    && export PATH=$PATH:$JAVA_HOME/bin \
-    && mkdir -p $TMP_DIR \
-    && cd $TMP_DIR \
-    && git clone https://github.com/tronprotocol/java-tron.git \
-    && cd java-tron \
-    && git checkout master \
-    && ./gradlew build -x test \
-    && cd build/distributions \
-    && 7za x -y java-tron-1.0.0.zip \
-    && mv java-tron-1.0.0 $BASE_DIR \
+# 针对架构的构建逻辑
+RUN set -o errexit -o nounset \
+    && yum -y install git wget unzip \
+    # arm64 的构建逻辑
+    && if [ "$ARCH" = "arm64" ]; then \
+         echo "Building for arm64 architecture" && \
+         mkdir -p $TMP_DIR && \
+         cd $TMP_DIR && \
+         git clone https://github.com/lxcmyf/java-tron.git && \
+         cd java-tron && \
+         git checkout arm64 && \
+         ./gradlew build -x test && \
+         cd build/distributions && \
+         unzip -o java-tron-1.0.0.zip && \
+         mv java-tron-1.0.0 $BASE_DIR; \
+    fi \
+    # x86 的构建逻辑
+    && if [ "$ARCH" = "x86" ]; then \
+         echo "Building for x86 architecture" && \
+         wget -P /usr/local https://github.com/frekele/oracle-java/releases/download/8u202-b08/jdk-8u202-linux-x64.tar.gz && \
+         echo "0029351f7a946f6c05b582100c7d45b7  /usr/local/jdk-8u202-linux-x64.tar.gz" | md5sum -c && \
+         tar -zxf /usr/local/jdk-8u202-linux-x64.tar.gz -C /usr/local && \
+         rm /usr/local/jdk-8u202-linux-x64.tar.gz && \
+         export JAVA_HOME=/usr/local/jdk1.8.0_202 && \
+         export PATH=$JAVA_HOME/bin:$PATH && \
+         export CLASSPATH=$JAVA_HOME/lib/tools.jar:$JAVA_HOME/lib/dt.jar && \
+         mkdir -p $TMP_DIR && \
+         cd $TMP_DIR && \
+         git clone https://github.com/tronprotocol/java-tron.git && \
+         cd java-tron && \
+         git checkout master && \
+         ./gradlew build -x test && \
+         cd build/distributions && \
+         unzip -o java-tron-1.0.0.zip && \
+         mv java-tron-1.0.0 $BASE_DIR && \
+         mv $JAVA_HOME/jre /usr/local/jre && \
+         rm -rf $JAVA_HOME; \
+    fi \
     && rm -rf $TMP_DIR \
-    && rm -rf ~/.gradle \
-    && mv $JAVA_HOME/jre /usr/local \
-    && rm -rf $JAVA_HOME \
-    && yum clean all; \
-fi
+    && yum clean all
 
-RUN if [ "$ARCH" = "arm64" ]; then \
-    yum -y install 7zip git wget \
-    && mkdir -p $TMP_DIR \
-    && cd $TMP_DIR \
-    && git clone https://github.com/lxcmyf/java-tron.git \
-    && cd java-tron \
-    && git checkout arm64 \
-    && ./gradlew build -x test \
-    && cd build/distributions \
-    && 7za x -y java-tron-1.0.0.zip \
-    && mv java-tron-1.0.0 $BASE_DIR \
-    && rm -rf $TMP_DIR \
-    && rm -rf ~/.gradle \
-    && yum clean all; \
-fi
-
+# 公共逻辑：下载配置文件
 RUN wget -P $BASE_DIR/config https://raw.githubusercontent.com/tronprotocol/tron-deployment/master/main_net_config.conf
 
-ENV JAVA_HOME="/usr/local/jre"
+# 环境变量设置（适用于 x86 和 arm64）
+ENV JAVA_HOME=/usr/local/jre
 ENV PATH=$PATH:$JAVA_HOME/bin
 
+# 拷贝入口脚本
 COPY docker-entrypoint.sh $BASE_DIR/bin
 
+# 设置工作目录
 WORKDIR $BASE_DIR
 
+# 入口命令
 ENTRYPOINT ["./bin/docker-entrypoint.sh"]
