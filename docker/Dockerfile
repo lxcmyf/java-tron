@@ -1,22 +1,24 @@
-FROM tronprotocol/centos7:0.2
+ARG ARCH=x86
+
+FROM tronprotocol/centos7:0.2 AS x86
+FROM amazoncorretto:17.0.13 AS arm64
+
+FROM ${ARCH} AS builder
 
 ENV TMP_DIR="/tron-build"
-ENV JDK_TAR="jdk-8u202-linux-x64.tar.gz"
-ENV JDK_DIR="jdk1.8.0_202"
-ENV JDK_MD5="0029351f7a946f6c05b582100c7d45b7"
 ENV BASE_DIR="/java-tron"
+ENV UNZIP_DISABLE_ZIPBOMB_DETECTION=TRUE
 
-
-RUN set -o errexit -o nounset \
+RUN if [ "$ARCH" = "x86" ]; then \
+    set -o errexit -o nounset \
     && yum -y install git wget \
-    && wget -P /usr/local https://github.com/frekele/oracle-java/releases/download/8u202-b08/$JDK_TAR \
-    && echo "$JDK_MD5 /usr/local/$JDK_TAR" | md5sum -c \
-    && tar -zxf /usr/local/$JDK_TAR -C /usr/local\
-    && rm /usr/local/$JDK_TAR \
-    && export JAVA_HOME=/usr/local/$JDK_DIR \
+    && wget -P /usr/local https://github.com/frekele/oracle-java/releases/download/8u202-b08/jdk-8u202-linux-x64.tar.gz \
+    && echo "0029351f7a946f6c05b582100c7d45b7 /usr/local/jdk-8u202-linux-x64.tar.gz" | md5sum -c \
+    && tar -zxf /usr/local/jdk-8u202-linux-x64.tar.gz -C /usr/local \
+    && rm /usr/local/jdk-8u202-linux-x64.tar.gz \
+    && export JAVA_HOME=/usr/local/jdk1.8.0_202 \
     && export CLASSPATH=$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar \
     && export PATH=$PATH:$JAVA_HOME/bin \
-    && echo "git clone" \
     && mkdir -p $TMP_DIR \
     && cd $TMP_DIR \
     && git clone https://github.com/tronprotocol/java-tron.git \
@@ -24,13 +26,31 @@ RUN set -o errexit -o nounset \
     && git checkout master \
     && ./gradlew build -x test \
     && cd build/distributions \
-    && 7za x -y java-tron-1.0.0.zip  \
+    && 7za x -y java-tron-1.0.0.zip \
     && mv java-tron-1.0.0 $BASE_DIR \
     && rm -rf $TMP_DIR \
     && rm -rf ~/.gradle \
     && mv $JAVA_HOME/jre /usr/local \
     && rm -rf $JAVA_HOME \
-    && yum clean all
+    && yum clean all; \
+fi
+
+RUN if [ "$ARCH" = "arm64" ]; then \
+    set -o errexit -o nounset \
+    && yum -y install git unzip wget \
+    && mkdir -p $TMP_DIR \
+    && cd $TMP_DIR \
+    && git clone https://github.com/lxcmyf/java-tron.git \
+    && cd java-tron \
+    && git checkout arm64 \
+    && ./gradlew build -x test \
+    && cd build/distributions \
+    && unzip -o java-tron-1.0.0.zip \
+    && mv java-tron-1.0.0 $BASE_DIR \
+    && rm -rf $TMP_DIR \
+    && rm -rf ~/.gradle \
+    && yum clean all; \
+fi
 
 RUN wget -P $BASE_DIR/config https://raw.githubusercontent.com/tronprotocol/tron-deployment/master/main_net_config.conf
 
