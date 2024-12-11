@@ -69,9 +69,8 @@ RUN if [ "$ARCH" = "x86" ]; then \
     fi
 
 # 仅在 x86 架构下设置环境变量
-ARG ARCH
-ENV JAVA_HOME=$([ "$ARCH" = "x86" ] && echo "/usr/local/jre" || echo "")
-ENV PATH=$([ "$ARCH" = "x86" ] && echo "$PATH:/usr/local/jre/bin" || echo "$PATH")
+ENV JAVA_HOME=${JAVA_HOME:-/usr/local/jre}
+ENV PATH=${PATH:-/usr/local/jre/bin:$PATH}
 
 # 拷贝入口脚本
 COPY docker-entrypoint.sh $BASE_DIR/bin
