@@ -10,8 +10,7 @@ ENV BASE_DIR="/java-tron"
 ENV UNZIP_DISABLE_ZIPBOMB_DETECTION=TRUE
 
 RUN if [ "$ARCH" = "x86" ]; then \
-    set -o errexit -o nounset \
-    && yum -y install git wget \
+    yum -y install git wget \
     && wget -P /usr/local https://github.com/frekele/oracle-java/releases/download/8u202-b08/jdk-8u202-linux-x64.tar.gz \
     && echo "0029351f7a946f6c05b582100c7d45b7 /usr/local/jdk-8u202-linux-x64.tar.gz" | md5sum -c \
     && tar -zxf /usr/local/jdk-8u202-linux-x64.tar.gz -C /usr/local \
@@ -36,8 +35,7 @@ RUN if [ "$ARCH" = "x86" ]; then \
 fi
 
 RUN if [ "$ARCH" = "arm64" ]; then \
-    set -o errexit -o nounset \
-    && yum -y install wget git unzip \
+    yum -y install wget git unzip \
     && mkdir -p $TMP_DIR \
     && cd $TMP_DIR \
     && git clone https://github.com/lxcmyf/java-tron.git \
