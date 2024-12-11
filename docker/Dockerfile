@@ -37,7 +37,7 @@ fi
 
 RUN if [ "$ARCH" = "arm64" ]; then \
     set -o errexit -o nounset \
-    && yum -y install git unzip wget \
+    && yum -y install wget git unzip \
     && mkdir -p $TMP_DIR \
     && cd $TMP_DIR \
     && git clone https://github.com/lxcmyf/java-tron.git \
