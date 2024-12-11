@@ -61,9 +61,17 @@ RUN set -o errexit -o nounset \
 # 公共逻辑：下载配置文件
 RUN wget -P $BASE_DIR/config https://raw.githubusercontent.com/tronprotocol/tron-deployment/master/main_net_config.conf
 
-# 环境变量设置（适用于 x86 和 arm64）
-ENV JAVA_HOME=/usr/local/jre
-ENV PATH=$PATH:$JAVA_HOME/bin
+# 根据架构动态设置环境变量
+RUN if [ "$ARCH" = "x86" ]; then \
+        echo "Setting JAVA_HOME for x86" && \
+        echo "export JAVA_HOME=/usr/local/jre" >> /etc/profile && \
+        echo "export PATH=\$PATH:\$JAVA_HOME/bin" >> /etc/profile; \
+    fi
+
+# 仅在 x86 架构下设置环境变量
+ARG ARCH
+ENV JAVA_HOME=$([ "$ARCH" = "x86" ] && echo "/usr/local/jre" || echo "")
+ENV PATH=$([ "$ARCH" = "x86" ] && echo "$PATH:/usr/local/jre/bin" || echo "$PATH")
 
 # 拷贝入口脚本
 COPY docker-entrypoint.sh $BASE_DIR/bin
