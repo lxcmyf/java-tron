@@ -178,6 +178,7 @@ public class TransactionLogTriggerCapsuleTest {
         triggerCapsule.getTransactionLogTrigger().getExtMap().get(BANDWIDTH.name()).longValue());
   }
 
+
   @Test
   public void testConstructorWithTransferCapsule() {
     BalanceContract.TransferContract.Builder builder2 =
@@ -240,7 +241,6 @@ public class TransactionLogTriggerCapsuleTest {
 
     Assert.assertNotNull(triggerCapsule.getTransactionLogTrigger().getFromAddress());
   }
-
 
 
 

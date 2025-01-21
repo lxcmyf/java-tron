@@ -1344,8 +1344,13 @@ public class Wallet {
         .build());
 
     builder.addChainParameter(Protocol.ChainParameters.ChainParameter.newBuilder()
-        .setKey("getAllowOptimizeTxsByConsensus")
-        .setValue(dbManager.getDynamicPropertiesStore().getAllowOptimizeTxsByConsensus())
+        .setKey("getAllowStrictMath")
+        .setValue(dbManager.getDynamicPropertiesStore().getAllowStrictMath())
+        .build());
+
+    builder.addChainParameter(Protocol.ChainParameters.ChainParameter.newBuilder()
+        .setKey("getConsensusLogicOptimization")
+        .setValue(dbManager.getDynamicPropertiesStore().getConsensusLogicOptimization())
         .build());
 
     return builder.build();
