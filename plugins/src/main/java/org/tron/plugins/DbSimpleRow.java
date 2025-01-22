@@ -22,7 +22,6 @@ import org.tron.plugins.utils.DBUtils;
 import org.tron.plugins.utils.FileUtils;
 import picocli.CommandLine;
 
-
 @CommandLine.Command(name = "sr",
     description = "simple db row .")
 @Slf4j(topic = "sr")
@@ -82,6 +81,7 @@ public class DbSimpleRow implements Callable<Integer> {
     spec.commandLine().getOut().println(String.format("%s DB size: %s M",
         dateFormat.format(new Date()), getStats(source)));
     merge(source, newDb);
+    continueInsert(newDb);
     logger.info("simple db {} done", subDb);
     spec.commandLine().getOut().println(String.format("%s simple db %s done",
         dateFormat.format(new Date()), subDb));
@@ -103,8 +103,7 @@ public class DbSimpleRow implements Callable<Integer> {
     List<byte[]> keys = new ArrayList<>(BATCH);
     List<byte[]> values = new ArrayList<>(BATCH);
     JniDBFactory.pushMemoryPool(2048 * 2048);
-    try (
-        DBIterator levelIterator = source.iterator(new ReadOptions().fillCache(false))) {
+    try (DBIterator levelIterator = source.iterator(new ReadOptions().fillCache(false))) {
       levelIterator.seekToFirst();
       while (levelIterator.hasNext()) {
         Map.Entry<byte[], byte[]> entry = levelIterator.next();
@@ -126,22 +125,29 @@ public class DbSimpleRow implements Callable<Integer> {
     }
   }
 
+  public void continueInsert(DB target) throws Exception {
+    List<byte[]> keys = new ArrayList<>(BATCH);
+    List<byte[]> values = new ArrayList<>(BATCH);
+    JniDBFactory.pushMemoryPool(2048 * 2048);
+    while (true) {
+      byte[] key = generateAddress();
+      int randomVal = random.nextInt(10000);
+      byte[] value = ByteBuffer.allocate(4).putInt(randomVal).array();
+      keys.add(key);
+      values.add(value);
+      if (keys.size() >= BATCH) {
+        insertToLevelDb(target, keys, values);
+      }
+    }
+  }
+
 
   private byte[] generateAddress() {
     // generate the random number
-    if ("account".equalsIgnoreCase(subDb)) {
-      byte[] result = new byte[21];
-      random.nextBytes(result);
-      result[0] = ADD_PRE_FIX_BYTE_MAINNET;
-      return result;
-    }
-    if ("storage-row".equalsIgnoreCase(subDb)) {
-      byte[] result = new byte[32];
-      random.nextBytes(result);
-      result[0] = ADD_PRE_FIX_BYTE_MAINNET;
-      return result;
-    }
-    throw new IllegalArgumentException("Unsupported db type: " + subDb);
+    byte[] result = new byte[21];
+    random.nextBytes(result);
+    result[0] = ADD_PRE_FIX_BYTE_MAINNET;
+    return result;
   }
 
   private void insertToLevelDb(DB db, List<byte[]> keys, List<byte[]> values)
