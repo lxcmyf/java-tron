@@ -18,6 +18,7 @@ import picocli.CommandLine;
         DbStat.class,
         DbDump.class,
         DbSimpleRow.class,
+        Dbq.class,
     },
     commandListHeading = "%nCommands:%n%nThe most commonly used db commands are:%n"
 )
