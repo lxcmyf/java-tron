@@ -60,7 +60,7 @@ public class Dbq implements Callable<Integer> {
           long start = System.nanoTime();
           database.get(k);
           long end = System.nanoTime();
-          spec.commandLine().getOut().format("耗时: %d ms", (end - start) / 1000).println();
+          spec.commandLine().getOut().format("耗时: %d μs", (end - start) / 1000).println();
         });
       }
     }
