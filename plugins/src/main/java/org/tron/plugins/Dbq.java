@@ -1,7 +1,11 @@
 package org.tron.plugins;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +14,6 @@ import org.tron.plugins.utils.ByteArray;
 import org.tron.plugins.utils.db.DBInterface;
 import org.tron.plugins.utils.db.DbTool;
 import picocli.CommandLine;
-
 
 @Slf4j(topic = "qd")
 @CommandLine.Command(name = "qd",
@@ -31,7 +34,10 @@ public class Dbq implements Callable<Integer> {
       description = "key for query in hex",
       split = ","
   )
-  private List<String> keys;
+  private List<String> keys = new ArrayList<>();
+
+  @CommandLine.Option(names = {"-f", "--file"}, description = "File containing keys for query", required = false)
+  private String keysFile;
   @CommandLine.Option(names = {"-h", "--help"}, help = true, description = "display a help message")
   private boolean help;
 
@@ -46,6 +52,10 @@ public class Dbq implements Callable<Integer> {
       spec.commandLine().getErr().println(spec.commandLine().getColorScheme()
           .errorText(String.format("%s does not exist.", db)));
       return 404;
+    }
+    if (keysFile != null) {
+      // 从文件中读取keys，并填充到keys列表
+      readKeysFromFile(keysFile);
     }
     return query();
   }
@@ -65,5 +75,24 @@ public class Dbq implements Callable<Integer> {
       }
     }
     return 0;
+  }
+
+  private void readKeysFromFile(String filePath) throws IOException {
+    File file = new File(filePath);
+    if (!file.exists()) {
+      spec.commandLine().getErr().println(spec.commandLine().getColorScheme()
+          .errorText(String.format("文件 %s 不存在.", filePath)));
+      return;
+    }
+
+    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        if (!line.isEmpty()) {
+          keys.add(line);  // 将每行的key加入到keys列表中
+        }
+      }
+    }
   }
 }
