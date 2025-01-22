@@ -26,8 +26,11 @@ public class Dbq implements Callable<Integer> {
   @CommandLine.Parameters(index = "0",
       description = " db path for query")
   private Path db;
-  @CommandLine.Option(names = { "--keys"},
-       description = "key for query in hex")
+  @CommandLine.Option(
+      names = { "--keys"},
+      description = "key for query in hex",
+      split = ","
+  )
   private List<String> keys;
   @CommandLine.Option(names = {"-h", "--help"}, help = true, description = "display a help message")
   private boolean help;
