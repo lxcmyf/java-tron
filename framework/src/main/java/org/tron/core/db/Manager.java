@@ -795,7 +795,7 @@ public class Manager {
   void validateCommon(TransactionCapsule transactionCapsule)
       throws TransactionExpirationException, TooBigTransactionException {
     boolean optimizeTxs = !transactionCapsule.isInBlock() || chainBaseManager
-        .getDynamicPropertiesStore().getAllowOptimizeTxsByConsensus() == 1;
+        .getDynamicPropertiesStore().allowConsensusLogicOptimization();
     if (optimizeTxs) {
       transactionCapsule.removeRedundantRet();
       long generalBytesSize =
@@ -816,7 +816,7 @@ public class Manager {
     long transactionExpiration = transactionCapsule.getExpiration();
     long headBlockTime = chainBaseManager.getHeadBlockTimeStamp();
     if (transactionCapsule.isInBlock() &&
-        chainBaseManager.getDynamicPropertiesStore().getAllowOptimizeTxsByConsensus() == 1) {
+        chainBaseManager.getDynamicPropertiesStore().allowConsensusLogicOptimization()) {
       transactionCapsule.checkExpiration(chainBaseManager.getNextBlockSlotTime());
     }
     if (transactionExpiration <= headBlockTime
