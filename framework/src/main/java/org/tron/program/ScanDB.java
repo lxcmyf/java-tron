@@ -23,7 +23,7 @@ public class ScanDB {
 
     String sourcePath = args[0];
 
-    iterateDB(sourcePath, bw);
+    iterateDB(sourcePath);
 
   }
 
