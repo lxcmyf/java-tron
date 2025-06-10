@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.rocksdb.RocksDBException;
 import org.tron.plugins.utils.ByteArray;
 import org.tron.plugins.utils.db.DBInterface;
+import org.tron.plugins.utils.db.DBIterator;
 import org.tron.plugins.utils.db.DbTool;
 import picocli.CommandLine;
 
@@ -61,17 +62,35 @@ public class Dbq implements Callable<Integer> {
   }
 
 
+//  private int query() throws RocksDBException, IOException {
+//    try (
+//        DBInterface database  = DbTool.getDB(this.db.getParent(),
+//            this.db.getFileName().toString())) {
+//      if (keys != null && !keys.isEmpty()) {
+//        keys.stream().map(ByteArray::fromHexString).forEach(k -> {
+//          long start = System.nanoTime();
+//          database.get(k);
+//          long end = System.nanoTime();
+//          spec.commandLine().getOut().format("耗时: %d μs", (end - start) / 1000).println();
+//        });
+//      }
+//    }
+//    return 0;
+//  }
+
   private int query() throws RocksDBException, IOException {
-    try (
-        DBInterface database  = DbTool.getDB(this.db.getParent(),
-            this.db.getFileName().toString())) {
-      if (keys != null && !keys.isEmpty()) {
-        keys.stream().map(ByteArray::fromHexString).forEach(k -> {
-          long start = System.nanoTime();
-          database.get(k);
-          long end = System.nanoTime();
-          spec.commandLine().getOut().format("耗时: %d μs", (end - start) / 1000).println();
-        });
+    try (DBInterface database = DbTool.getDB(this.db.getParent(), this.db.getFileName().toString())) {
+      DBIterator iterator = database.iterator();
+      int i = 0;
+      for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
+        if (i >= 1000000) {
+          break;
+        }
+        long start = System.nanoTime();
+        iterator.getValue();
+        long end = System.nanoTime();
+        spec.commandLine().getOut().format("耗时: %d μs", (end - start) / 1000).println();
+        i++;
       }
     }
     return 0;
