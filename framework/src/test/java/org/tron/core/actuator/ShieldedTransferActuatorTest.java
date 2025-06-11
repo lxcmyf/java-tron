@@ -80,7 +80,7 @@ public class ShieldedTransferActuatorTest extends BaseTest {
 
     ADDRESS_TWO_PRIVATE_KEY = PublicMethod.getRandomPrivateKey();
     PUBLIC_ADDRESS_TWO =
-            PublicMethod.getHexAddressByPrivateKey(ADDRESS_TWO_PRIVATE_KEY);
+        PublicMethod.getHexAddressByPrivateKey(ADDRESS_TWO_PRIVATE_KEY);
 
     DEFAULT_OVK = ByteArray.fromHexString(
         "030c8c2bc59fb3eb8afb047a8ea4b028743d23e7d38c6fa30908358431e2314d");
@@ -222,7 +222,10 @@ public class ShieldedTransferActuatorTest extends BaseTest {
         byte[] owner = getOwner(contract);
         Protocol.Permission permission = AccountCapsule.getDefaultPermission(ByteString.copyFrom(owner));
         byte[] hash = transactionCap.getTransactionId().getBytes();
+        long s = System.nanoTime();
         checkWeight(permission, transaction.getSignatureList(), hash, null);
+        long e = System.nanoTime();
+        System.out.println("耗时: " + (e - s) / 1000 + " μs");
       } catch (Exception e) {
         System.out.println(e.getMessage());
         Assert.assertTrue(false);
@@ -252,7 +255,7 @@ public class ShieldedTransferActuatorTest extends BaseTest {
 
       //Add public address sign
       transactionCap = TransactionUtils.addTransactionSign(transactionCap.getInstance(),
-              ADDRESS_ONE_PRIVATE_KEY, dbManager.getAccountStore());
+          ADDRESS_ONE_PRIVATE_KEY, dbManager.getAccountStore());
 
       Assert.assertTrue(dbManager.pushTransaction(transactionCap));
     } catch (Exception e) {
@@ -273,7 +276,7 @@ public class ShieldedTransferActuatorTest extends BaseTest {
 
       //Add public address sign
       TransactionUtils.addTransactionSign(transactionCap.getInstance(), ADDRESS_TWO_PRIVATE_KEY,
-              dbManager.getAccountStore());
+          dbManager.getAccountStore());
       Assert.assertTrue(false);
     } catch (PermissionException e) {
       Assert.assertTrue(e instanceof PermissionException);
@@ -418,7 +421,7 @@ public class ShieldedTransferActuatorTest extends BaseTest {
       TransactionCapsule transactionCap = getPublicToShieldedTransaction();
       //Add public address sign
       transactionCap = TransactionUtils.addTransactionSign(transactionCap.getInstance(),
-              ADDRESS_ONE_PRIVATE_KEY, dbManager.getAccountStore());
+          ADDRESS_ONE_PRIVATE_KEY, dbManager.getAccountStore());
 
       AccountCapsule accountCapsule =
           dbManager.getAccountStore().get(ByteArray.fromHexString(PUBLIC_ADDRESS_ONE));
@@ -1018,7 +1021,7 @@ public class ShieldedTransferActuatorTest extends BaseTest {
 
       //Add public address sign
       transactionCapOne = TransactionUtils.addTransactionSign(transactionCapOne.getInstance(),
-              ADDRESS_ONE_PRIVATE_KEY, dbManager.getAccountStore());
+          ADDRESS_ONE_PRIVATE_KEY, dbManager.getAccountStore());
 
       Assert.assertTrue(dbManager.pushTransaction(transactionCapOne));
       AccountCapsule accountCapsuleOne =
