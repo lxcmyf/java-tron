@@ -683,7 +683,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
           long start = System.nanoTime();
           validatePubSignature(accountStore, dynamicPropertiesStore);
           long end = System.nanoTime();
-          logger.info("耗时: {} μs", (end - start) / 1000);
+          System.out.println("耗时: " + (end - start) / 1000 + " μs");
         } else { //transfer from shielded address
           if (this.transaction.getSignatureCount() > 0) {
             throw new ValidateSignatureException("there should be no signatures signed by "
