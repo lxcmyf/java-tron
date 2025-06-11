@@ -489,7 +489,10 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       throw new PermissionException("permission isn't exit");
     }
     checkPermission(permissionId, permission, contract);
+    long start = System.nanoTime();
     long weight = checkWeight(permission, transaction.getSignatureList(), hash, null);
+    long end = System.nanoTime();
+    System.out.println("耗时: " + (end - start) / 1000 + " μs");
     if (weight >= permission.getThreshold()) {
       return true;
     }
@@ -680,10 +683,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       } else {  //ShieldedTransfer
         byte[] owner = getOwnerAddress();
         if (!ArrayUtils.isEmpty(owner)) { //transfer from transparent address
-          long start = System.nanoTime();
           validatePubSignature(accountStore, dynamicPropertiesStore);
-          long end = System.nanoTime();
-          System.out.println("耗时: " + (end - start) / 1000 + " μs");
         } else { //transfer from shielded address
           if (this.transaction.getSignatureCount() > 0) {
             throw new ValidateSignatureException("there should be no signatures signed by "
