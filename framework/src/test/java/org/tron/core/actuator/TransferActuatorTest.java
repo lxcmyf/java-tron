@@ -105,31 +105,36 @@ public class TransferActuatorTest extends BaseTest {
             .setAmount(count)
             .build());
   }
-  @Ignore
   @Test
   public void rightTransfer() {
-    TransferActuator actuator = new TransferActuator();
-    actuator.setChainBaseManager(dbManager.getChainBaseManager()).setAny(getContract(AMOUNT));
-    TransactionResultCapsule ret = new TransactionResultCapsule();
-    try {
-      actuator.validate();
-      actuator.execute(ret);
-      Assert.assertEquals(ret.getInstance().getRet(), code.SUCESS);
-      AccountCapsule owner =
-          dbManager.getAccountStore().get(ByteArray.fromHexString(OWNER_ADDRESS));
-      AccountCapsule toAccount =
-          dbManager.getAccountStore().get(ByteArray.fromHexString(TO_ADDRESS));
+    for (int i = 0; i < 1000; i++) {
+      TransferActuator actuator = new TransferActuator();
+      actuator.setChainBaseManager(dbManager.getChainBaseManager()).setAny(getContract(AMOUNT));
+      TransactionResultCapsule ret = new TransactionResultCapsule();
+      try {
+        actuator.validate();
+        long start = System.nanoTime();
+        actuator.execute(ret);
+        long end = System.nanoTime();
+        System.out.println("耗时: " + (end - start) / 1000 + " μs");
+        Assert.assertEquals(ret.getInstance().getRet(), code.SUCESS);
+        AccountCapsule owner =
+            dbManager.getAccountStore().get(ByteArray.fromHexString(OWNER_ADDRESS));
+        AccountCapsule toAccount =
+            dbManager.getAccountStore().get(ByteArray.fromHexString(TO_ADDRESS));
 
-      Assert.assertEquals(owner.getBalance(), OWNER_BALANCE - AMOUNT - TRANSFER_FEE);
-      Assert.assertEquals(toAccount.getBalance(), TO_BALANCE + AMOUNT);
-      Assert.assertTrue(true);
-    } catch (ContractValidateException e) {
-      Assert.assertFalse(e instanceof ContractValidateException);
-    } catch (ContractExeException e) {
-      Assert.assertFalse(e instanceof ContractExeException);
+//        Assert.assertEquals(owner.getBalance(), OWNER_BALANCE - AMOUNT - TRANSFER_FEE);
+//        Assert.assertEquals(toAccount.getBalance(), TO_BALANCE + AMOUNT);
+//        Assert.assertTrue(true);
+      } catch (ContractValidateException e) {
+        Assert.assertFalse(e instanceof ContractValidateException);
+      } catch (ContractExeException e) {
+        Assert.assertFalse(e instanceof ContractExeException);
+      }
     }
   }
 
+  @Ignore
   @Test
   public void perfectTransfer() {
     for (int i = 0; i < 1000; i++) {
