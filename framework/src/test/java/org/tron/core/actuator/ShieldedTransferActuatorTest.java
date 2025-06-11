@@ -1,5 +1,9 @@
 package org.tron.core.actuator;
 
+import static org.tron.core.capsule.TransactionCapsule.checkWeight;
+import static org.tron.core.capsule.TransactionCapsule.getOwner;
+import static org.tron.core.utils.TransactionUtil.getTransactionId;
+
 import com.google.protobuf.ByteString;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +41,7 @@ import org.tron.core.zen.address.IncomingViewingKey;
 import org.tron.core.zen.address.PaymentAddress;
 import org.tron.core.zen.address.SpendingKey;
 import org.tron.core.zen.note.Note;
+import org.tron.protos.Protocol;
 import org.tron.protos.Protocol.AccountType;
 import org.tron.protos.Protocol.Transaction.Contract;
 import org.tron.protos.contract.AssetIssueContractOuterClass.AssetIssueContract;
@@ -203,20 +208,28 @@ public class ShieldedTransferActuatorTest extends BaseTest {
   @Test
   public void publicAddressToShieldedAddressSuccess() {
     dbManager.getDynamicPropertiesStore().saveAllowShieldedTransaction(1);
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 1000000; i++) {
       try {
         TransactionCapsule transactionCap = getPublicToShieldedTransaction();
-
         //Add public address sign
         transactionCap = TransactionUtils.addTransactionSign(transactionCap.getInstance(),
             ADDRESS_ONE_PRIVATE_KEY, dbManager.getAccountStore());
-        dbManager.pushTransaction(transactionCap);
+//        dbManager.pushTransaction(transactionCap);
 //        Assert.assertTrue(dbManager.pushTransaction(transactionCap));
+
+        Protocol.Transaction transaction = transactionCap.getInstance();
+        Protocol.Transaction.Contract contract = transaction.getRawData().getContractList().get(0);
+        byte[] owner = getOwner(contract);
+        Protocol.Permission permission = AccountCapsule.getDefaultPermission(ByteString.copyFrom(owner));
+        byte[] hash = transactionCap.getTransactionId().getBytes();
+        checkWeight(permission, transaction.getSignatureList(), hash, null);
       } catch (Exception e) {
         System.out.println(e.getMessage());
         Assert.assertTrue(false);
       }
     }
+
+
   }
 
 
