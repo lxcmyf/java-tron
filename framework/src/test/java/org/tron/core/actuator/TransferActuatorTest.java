@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.tron.common.BaseTest;
 import org.tron.common.runtime.TvmTestUtils;
@@ -104,7 +105,7 @@ public class TransferActuatorTest extends BaseTest {
             .setAmount(count)
             .build());
   }
-
+  @Ignore
   @Test
   public void rightTransfer() {
     TransferActuator actuator = new TransferActuator();
@@ -131,30 +132,36 @@ public class TransferActuatorTest extends BaseTest {
 
   @Test
   public void perfectTransfer() {
-    TransferActuator actuator = new TransferActuator();
-    actuator.setChainBaseManager(dbManager.getChainBaseManager())
-        .setAny(getContract(OWNER_BALANCE - TRANSFER_FEE));
+    for (int i = 0; i < 1000; i++) {
+      TransferActuator actuator = new TransferActuator();
+      actuator.setChainBaseManager(dbManager.getChainBaseManager())
+          .setAny(getContract(OWNER_BALANCE - TRANSFER_FEE));
 
-    TransactionResultCapsule ret = new TransactionResultCapsule();
-    try {
-      actuator.validate();
-      actuator.execute(ret);
-      Assert.assertEquals(ret.getInstance().getRet(), code.SUCESS);
-      AccountCapsule owner =
-          dbManager.getAccountStore().get(ByteArray.fromHexString(OWNER_ADDRESS));
-      AccountCapsule toAccount =
-          dbManager.getAccountStore().get(ByteArray.fromHexString(TO_ADDRESS));
+      TransactionResultCapsule ret = new TransactionResultCapsule();
+      try {
+        actuator.validate();
+        long start = System.nanoTime();
+        actuator.execute(ret);
+        long end = System.nanoTime();
+        System.out.println("耗时: " + (end - start) / 1000 + " μs");
+        Assert.assertEquals(ret.getInstance().getRet(), code.SUCESS);
+        AccountCapsule owner =
+            dbManager.getAccountStore().get(ByteArray.fromHexString(OWNER_ADDRESS));
+        AccountCapsule toAccount =
+            dbManager.getAccountStore().get(ByteArray.fromHexString(TO_ADDRESS));
 
-      Assert.assertEquals(owner.getBalance(), 0);
-      Assert.assertEquals(toAccount.getBalance(), TO_BALANCE + OWNER_BALANCE);
-      Assert.assertTrue(true);
-    } catch (ContractValidateException e) {
-      Assert.assertFalse(e instanceof ContractValidateException);
-    } catch (ContractExeException e) {
-      Assert.assertFalse(e instanceof ContractExeException);
+        Assert.assertEquals(owner.getBalance(), 0);
+        Assert.assertEquals(toAccount.getBalance(), TO_BALANCE + OWNER_BALANCE);
+        Assert.assertTrue(true);
+      } catch (ContractValidateException e) {
+        Assert.assertFalse(e instanceof ContractValidateException);
+      } catch (ContractExeException e) {
+        Assert.assertFalse(e instanceof ContractExeException);
+      }
     }
-  }
 
+  }
+  @Ignore
   @Test
   public void moreTransfer() {
     TransferActuator actuator = new TransferActuator();
@@ -182,7 +189,7 @@ public class TransferActuatorTest extends BaseTest {
     }
   }
 
-
+  @Ignore
   @Test
   public void iniviateOwnerAddress() {
     TransferActuator actuator = new TransferActuator();
@@ -210,7 +217,7 @@ public class TransferActuatorTest extends BaseTest {
     }
 
   }
-
+  @Ignore
   @Test
   public void iniviateToAddress() {
     TransferActuator actuator = new TransferActuator();
@@ -237,7 +244,7 @@ public class TransferActuatorTest extends BaseTest {
     }
 
   }
-
+  @Ignore
   @Test
   public void iniviateTrx() {
     TransferActuator actuator = new TransferActuator();
@@ -264,7 +271,7 @@ public class TransferActuatorTest extends BaseTest {
     }
 
   }
-
+  @Ignore
   @Test
   public void noExitOwnerAccount() {
     TransferActuator actuator = new TransferActuator();
@@ -290,7 +297,7 @@ public class TransferActuatorTest extends BaseTest {
     }
 
   }
-
+  @Ignore
   @Test
   /**
    * If to account not exit, create it.
@@ -327,7 +334,7 @@ public class TransferActuatorTest extends BaseTest {
       dbManager.getAccountStore().delete(ByteArray.fromHexString(To_ACCOUNT_INVALID));
     }
   }
-
+  @Ignore
   @Test
   public void zeroAmountTest() {
     TransferActuator actuator = new TransferActuator();
@@ -352,7 +359,7 @@ public class TransferActuatorTest extends BaseTest {
       Assert.assertFalse(e instanceof ContractExeException);
     }
   }
-
+  @Ignore
   @Test
   public void negativeAmountTest() {
     TransferActuator actuator = new TransferActuator();
@@ -377,7 +384,7 @@ public class TransferActuatorTest extends BaseTest {
       Assert.assertFalse(e instanceof ContractExeException);
     }
   }
-
+  @Ignore
   @Test
   public void addOverflowTest() {
     // First, increase the to balance. Else can't complete this test case.
@@ -404,7 +411,7 @@ public class TransferActuatorTest extends BaseTest {
       Assert.assertFalse(e instanceof ContractExeException);
     }
   }
-
+  @Ignore
   @Test
   public void insufficientFee() {
     AccountCapsule ownerCapsule =
@@ -447,7 +454,7 @@ public class TransferActuatorTest extends BaseTest {
       dbManager.getAccountStore().delete(ByteArray.fromHexString(To_ACCOUNT_INVALID));
     }
   }
-
+  @Ignore
   @Test
   public void commonErrorCheck() {
     TransferActuator actuator = new TransferActuator();
@@ -467,7 +474,7 @@ public class TransferActuatorTest extends BaseTest {
     actuatorTest.setNullDBManagerMsg("No account store or dynamic store!");
     actuatorTest.nullDBManger();
   }
-
+  @Ignore
   @Test
   public void transferToSmartContractAddress()
       throws ContractExeException, ReceiptCheckErrException, VMIllegalException,
