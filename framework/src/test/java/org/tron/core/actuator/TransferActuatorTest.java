@@ -107,7 +107,7 @@ public class TransferActuatorTest extends BaseTest {
   }
   @Test
   public void rightTransfer() {
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 1000000; i++) {
       TransferActuator actuator = new TransferActuator();
       actuator.setChainBaseManager(dbManager.getChainBaseManager()).setAny(getContract(AMOUNT));
       TransactionResultCapsule ret = new TransactionResultCapsule();
