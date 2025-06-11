@@ -208,28 +208,29 @@ public class ShieldedTransferActuatorTest extends BaseTest {
   @Test
   public void publicAddressToShieldedAddressSuccess() {
     dbManager.getDynamicPropertiesStore().saveAllowShieldedTransaction(1);
-    for (int i = 0; i < 1000000; i++) {
-      try {
-        TransactionCapsule transactionCap = getPublicToShieldedTransaction();
-        //Add public address sign
-        transactionCap = TransactionUtils.addTransactionSign(transactionCap.getInstance(),
-            ADDRESS_ONE_PRIVATE_KEY, dbManager.getAccountStore());
+
+    try {
+      TransactionCapsule transactionCap = getPublicToShieldedTransaction();
+      //Add public address sign
+      transactionCap = TransactionUtils.addTransactionSign(transactionCap.getInstance(),
+          ADDRESS_ONE_PRIVATE_KEY, dbManager.getAccountStore());
 //        dbManager.pushTransaction(transactionCap);
 //        Assert.assertTrue(dbManager.pushTransaction(transactionCap));
 
-        Protocol.Transaction transaction = transactionCap.getInstance();
-        Protocol.Transaction.Contract contract = transaction.getRawData().getContractList().get(0);
-        byte[] owner = getOwner(contract);
-        Protocol.Permission permission = AccountCapsule.getDefaultPermission(ByteString.copyFrom(owner));
-        byte[] hash = transactionCap.getTransactionId().getBytes();
+      Protocol.Transaction transaction = transactionCap.getInstance();
+      Protocol.Transaction.Contract contract = transaction.getRawData().getContractList().get(0);
+      byte[] owner = getOwner(contract);
+      Protocol.Permission permission = AccountCapsule.getDefaultPermission(ByteString.copyFrom(owner));
+      byte[] hash = transactionCap.getTransactionId().getBytes();
+      for (int i = 0; i < 1000000; i++) {
         long s = System.nanoTime();
         checkWeight(permission, transaction.getSignatureList(), hash, null);
         long e = System.nanoTime();
         System.out.println("耗时: " + (e - s) / 1000 + " μs");
-      } catch (Exception e) {
-        System.out.println(e.getMessage());
-        Assert.assertTrue(false);
       }
+    } catch (Exception e) {
+      System.out.println(e.getMessage());
+      Assert.assertTrue(false);
     }
   }
 
