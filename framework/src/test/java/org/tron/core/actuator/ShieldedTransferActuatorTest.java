@@ -222,7 +222,10 @@ public class ShieldedTransferActuatorTest extends BaseTest {
         byte[] owner = getOwner(contract);
         Protocol.Permission permission = AccountCapsule.getDefaultPermission(ByteString.copyFrom(owner));
         byte[] hash = transactionCap.getTransactionId().getBytes();
+        long s = System.nanoTime();
         checkWeight(permission, transaction.getSignatureList(), hash, null);
+        long e = System.nanoTime();
+        System.out.println("耗时: " + (e - s) / 1000 + " μs");
       } catch (Exception e) {
         System.out.println(e.getMessage());
         Assert.assertTrue(false);
