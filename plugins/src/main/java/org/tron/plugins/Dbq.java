@@ -69,21 +69,21 @@ public class Dbq implements Callable<Integer> {
   }
 
 
-//  private int query() throws RocksDBException, IOException {
-//    try (
-//        DBInterface database  = DbTool.getDB(this.db.getParent(),
-//            this.db.getFileName().toString())) {
-//      if (keys != null && !keys.isEmpty()) {
-//        keys.stream().map(ByteArray::fromHexString).forEach(k -> {
-//          long start = System.nanoTime();
-//          database.get(k);
-//          long end = System.nanoTime();
-//          spec.commandLine().getOut().format("耗时: %d μs", (end - start) / 1000).println();
-//        });
-//      }
-//    }
-//    return 0;
-//  }
+  private int query() throws RocksDBException, IOException {
+    try (
+        DBInterface database  = DbTool.getDB(this.db.getParent(),
+            this.db.getFileName().toString())) {
+      if (keys != null && !keys.isEmpty()) {
+        keys.stream().map(ByteArray::fromHexString).forEach(k -> {
+          long start = System.nanoTime();
+          database.get(k);
+          long end = System.nanoTime();
+          spec.commandLine().getOut().format("耗时: %d μs", (end - start) / 1000).println();
+        });
+      }
+    }
+    return 0;
+  }
 
 //  private int query() throws RocksDBException, IOException {
 //    try (DBInterface database = DbTool.getDB(this.db.getParent(), this.db.getFileName().toString())) {
@@ -103,45 +103,45 @@ public class Dbq implements Callable<Integer> {
 //    return 0;
 //  }
 
-  private int query() {
-    int count = 1_000_000;  // 消息数量
-    List<Protocol.Account> accounts = new ArrayList<>(count);
-
-    // 构造测试数据
-    for (int i = 0; i < count; i++) {
-      ByteString addressByte = ByteString.copyFrom(ByteArray.fromHexString(OWNER_ADDRESS));
-      ByteString name = ByteString.copyFrom(("name" + i).getBytes());
-      ByteString id = ByteString.copyFrom(UUID.randomUUID().toString().getBytes());
-      Protocol.Account account = Protocol.Account.newBuilder()
-          .setAddress(addressByte)
-          .setAccountName(name).setAccountId(id)
-          .build();
-      accounts.add(account);
-    }
-
-    // 测试序列化
-    long startSerialization = System.nanoTime();
-    List<byte[]> serializedData = new ArrayList<>(count);
-    for (Protocol.Account account : accounts) {
-      serializedData.add(account.toByteArray());
-    }
-    long endSerialization = System.nanoTime();
-    spec.commandLine().getOut().format("耗时: %d μs", (endSerialization - startSerialization) / 1000).println();
-
-    // 测试反序列化
-    long startDeserialization = System.nanoTime();
-    List<Protocol.Account> deserializedPeople = new ArrayList<>(count);
-    for (byte[] data : serializedData) {
-      try {
-        deserializedPeople.add(Protocol.Account.parseFrom(data));
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    }
-    long endDeserialization = System.nanoTime();
-    spec.commandLine().getOut().format("耗时: %d μs", (endDeserialization - startDeserialization) / 1000).println();
-    return 0;
-  }
+//  private int query() {
+//    int count = 1_000_000;  // 消息数量
+//    List<Protocol.Account> accounts = new ArrayList<>(count);
+//
+//    // 构造测试数据
+//    for (int i = 0; i < count; i++) {
+//      ByteString addressByte = ByteString.copyFrom(ByteArray.fromHexString(OWNER_ADDRESS));
+//      ByteString name = ByteString.copyFrom(("name" + i).getBytes());
+//      ByteString id = ByteString.copyFrom(UUID.randomUUID().toString().getBytes());
+//      Protocol.Account account = Protocol.Account.newBuilder()
+//          .setAddress(addressByte)
+//          .setAccountName(name).setAccountId(id)
+//          .build();
+//      accounts.add(account);
+//    }
+//
+//    // 测试序列化
+//    long startSerialization = System.nanoTime();
+//    List<byte[]> serializedData = new ArrayList<>(count);
+//    for (Protocol.Account account : accounts) {
+//      serializedData.add(account.toByteArray());
+//    }
+//    long endSerialization = System.nanoTime();
+//    spec.commandLine().getOut().format("耗时: %d μs", (endSerialization - startSerialization) / 1000).println();
+//
+//    // 测试反序列化
+//    long startDeserialization = System.nanoTime();
+//    List<Protocol.Account> deserializedPeople = new ArrayList<>(count);
+//    for (byte[] data : serializedData) {
+//      try {
+//        deserializedPeople.add(Protocol.Account.parseFrom(data));
+//      } catch (Exception e) {
+//        e.printStackTrace();
+//      }
+//    }
+//    long endDeserialization = System.nanoTime();
+//    spec.commandLine().getOut().format("耗时: %d μs", (endDeserialization - startDeserialization) / 1000).println();
+//    return 0;
+//  }
 
   private void readKeysFromFile(String filePath) throws IOException {
     File file = new File(filePath);
