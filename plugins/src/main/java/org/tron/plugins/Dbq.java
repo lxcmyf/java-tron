@@ -69,39 +69,39 @@ public class Dbq implements Callable<Integer> {
   }
 
 
-  private int query() throws RocksDBException, IOException {
-    try (
-        DBInterface database  = DbTool.getDB(this.db.getParent(),
-            this.db.getFileName().toString())) {
-      if (keys != null && !keys.isEmpty()) {
-        keys.stream().map(ByteArray::fromHexString).forEach(k -> {
-          long start = System.nanoTime();
-          database.get(k);
-          long end = System.nanoTime();
-          spec.commandLine().getOut().format("耗时: %d μs", (end - start) / 1000).println();
-        });
-      }
-    }
-    return 0;
-  }
-
 //  private int query() throws RocksDBException, IOException {
-//    try (DBInterface database = DbTool.getDB(this.db.getParent(), this.db.getFileName().toString())) {
-//      DBIterator iterator = database.iterator();
-//      long start = System.nanoTime();
-//      int i = 0;
-//      for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
-//        if (i >= 1000000) {
-//          break;
-//        }
-//        iterator.getValue();
-//        i++;
+//    try (
+//        DBInterface database  = DbTool.getDB(this.db.getParent(),
+//            this.db.getFileName().toString())) {
+//      if (keys != null && !keys.isEmpty()) {
+//        keys.stream().map(ByteArray::fromHexString).forEach(k -> {
+//          long start = System.nanoTime();
+//          database.get(k);
+//          long end = System.nanoTime();
+//          spec.commandLine().getOut().format("耗时: %d μs", (end - start) / 1000).println();
+//        });
 //      }
-//      long end = System.nanoTime();
-//      spec.commandLine().getOut().format("耗时: %d μs", (end - start) / 1000).println();
 //    }
 //    return 0;
 //  }
+
+  private int query() throws RocksDBException, IOException {
+    try (DBInterface database = DbTool.getDB(this.db.getParent(), this.db.getFileName().toString())) {
+      DBIterator iterator = database.iterator();
+      long start = System.nanoTime();
+      int i = 0;
+      for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
+        if (i >= 1000000) {
+          break;
+        }
+        iterator.getValue();
+        i++;
+      }
+      long end = System.nanoTime();
+      spec.commandLine().getOut().format("耗时: %d μs", (end - start) / 1000).println();
+    }
+    return 0;
+  }
 
 //  private int query() {
 //    int count = 1_000_000;  // 消息数量
