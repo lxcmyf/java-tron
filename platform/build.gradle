@@ -18,7 +18,7 @@ if (isX86()) {
         leveldbGroup = "org.fusesource.leveldbjni"
         leveldbName = "leveldbjni-all"
         leveldbVersion = "1.8"
-        rocksDBVersion = "5.15.10"
+        rocksDBVersion = "7.7.3"
     }
 } else if (isArm64()) {
     ext {
@@ -50,5 +50,5 @@ dependencies {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    source = isX86() ? sourceSets.x86.java : sourceSets.arm.java
+    source = sourceSets.arm.java
 }
