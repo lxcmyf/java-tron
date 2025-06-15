@@ -145,10 +145,7 @@ public class TransferActuatorTest extends BaseTest {
       TransactionResultCapsule ret = new TransactionResultCapsule();
       try {
         actuator.validate();
-        long start = System.nanoTime();
         actuator.execute(ret);
-        long end = System.nanoTime();
-        System.out.println("耗时: " + (end - start) / 1000 + " μs");
         Assert.assertEquals(ret.getInstance().getRet(), code.SUCESS);
         AccountCapsule owner =
             dbManager.getAccountStore().get(ByteArray.fromHexString(OWNER_ADDRESS));
