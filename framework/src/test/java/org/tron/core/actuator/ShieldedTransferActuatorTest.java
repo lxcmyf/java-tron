@@ -5,6 +5,10 @@ import static org.tron.core.capsule.TransactionCapsule.getOwner;
 import static org.tron.core.utils.TransactionUtil.getTransactionId;
 
 import com.google.protobuf.ByteString;
+import java.security.SignatureException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -30,6 +34,7 @@ import org.tron.core.capsule.TransactionResultCapsule;
 import org.tron.core.config.args.Args;
 import org.tron.core.exception.ContractValidateException;
 import org.tron.core.exception.PermissionException;
+import org.tron.core.exception.SignatureFormatException;
 import org.tron.core.exception.ValidateSignatureException;
 import org.tron.core.exception.ZksnarkException;
 import org.tron.core.zen.ZenTransactionBuilder;
@@ -205,29 +210,74 @@ public class ShieldedTransferActuatorTest extends BaseTest {
   /**
    * From public address to shielded Address success
    */
+//  @Test
+//  public void publicAddressToShieldedAddressSuccess() {
+//    dbManager.getDynamicPropertiesStore().saveAllowShieldedTransaction(1);
+//
+//    try {
+//      TransactionCapsule transactionCap = getPublicToShieldedTransaction();
+//      //Add public address sign
+//      transactionCap = TransactionUtils.addTransactionSign(transactionCap.getInstance(),
+//          ADDRESS_ONE_PRIVATE_KEY, dbManager.getAccountStore());
+////        dbManager.pushTransaction(transactionCap);
+////        Assert.assertTrue(dbManager.pushTransaction(transactionCap));
+//
+//      Protocol.Transaction transaction = transactionCap.getInstance();
+//      Protocol.Transaction.Contract contract = transaction.getRawData().getContractList().get(0);
+//      byte[] owner = getOwner(contract);
+//      Protocol.Permission permission = AccountCapsule.getDefaultPermission(ByteString.copyFrom(owner));
+//      byte[] hash = transactionCap.getTransactionId().getBytes();
+//      for (int i = 0; i < 1000000; i++) {
+//        long s = System.nanoTime();
+//        checkWeight(permission, transaction.getSignatureList(), hash, null);
+//        long e = System.nanoTime();
+//        System.out.println("耗时: " + (e - s) / 1000 + " μs");
+//      }
+//    } catch (Exception e) {
+//      System.out.println(e.getMessage());
+//      Assert.assertTrue(false);
+//    }
+//  }
+
   @Test
   public void publicAddressToShieldedAddressSuccess() {
     dbManager.getDynamicPropertiesStore().saveAllowShieldedTransaction(1);
 
     try {
       TransactionCapsule transactionCap = getPublicToShieldedTransaction();
-      //Add public address sign
       transactionCap = TransactionUtils.addTransactionSign(transactionCap.getInstance(),
           ADDRESS_ONE_PRIVATE_KEY, dbManager.getAccountStore());
-//        dbManager.pushTransaction(transactionCap);
-//        Assert.assertTrue(dbManager.pushTransaction(transactionCap));
 
       Protocol.Transaction transaction = transactionCap.getInstance();
       Protocol.Transaction.Contract contract = transaction.getRawData().getContractList().get(0);
       byte[] owner = getOwner(contract);
       Protocol.Permission permission = AccountCapsule.getDefaultPermission(ByteString.copyFrom(owner));
       byte[] hash = transactionCap.getTransactionId().getBytes();
-      for (int i = 0; i < 1000000; i++) {
-        long s = System.nanoTime();
-        checkWeight(permission, transaction.getSignatureList(), hash, null);
-        long e = System.nanoTime();
-        System.out.println("耗时: " + (e - s) / 1000 + " μs");
+
+
+      int threads = Runtime.getRuntime().availableProcessors(); // for 16
+      ExecutorService executor = Executors.newFixedThreadPool(threads);
+
+      int totalTasks = 1_000_000;
+      CountDownLatch latch = new CountDownLatch(totalTasks);
+
+      long s = System.nanoTime();
+      for (int i = 0; i < totalTasks; i++) {
+        executor.submit(() -> {
+          try {
+            checkWeight(permission, transaction.getSignatureList(), hash, null);
+          } catch (SignatureException | SignatureFormatException | PermissionException e) {
+            throw new RuntimeException(e);
+          }
+          latch.countDown();
+        });
       }
+
+      latch.await();
+      executor.shutdown();
+      long e = System.nanoTime();
+      long costUs = (e - s) / 1000;
+      System.out.println("耗时: " + costUs + " μs");
     } catch (Exception e) {
       System.out.println(e.getMessage());
       Assert.assertTrue(false);
