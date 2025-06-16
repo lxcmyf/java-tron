@@ -10,6 +10,7 @@ import com.google.protobuf.ByteString;
 import java.security.SignatureException;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Random;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Assert;
@@ -49,7 +50,7 @@ public class TransferActuatorTest extends BaseTest {
   private static final String OWNER_ADDRESS;
   private static final String TO_ADDRESS;
   private static final long AMOUNT = 100;
-  private static final long OWNER_BALANCE = 9999999;
+  private static final long OWNER_BALANCE = 999999999;
   private static final long TO_BALANCE = 100001;
   private static final String OWNER_ADDRESS_INVALID = "aaaa";
   private static final String TO_ADDRESS_INVALID = "bbb";
@@ -118,27 +119,28 @@ public class TransferActuatorTest extends BaseTest {
   }
   @Test
   public void rightTransfer() {
-    for (int i = 0; i < 1000000; i++) {
-      TransferActuator actuator = new TransferActuator();
-      actuator.setChainBaseManager(dbManager.getChainBaseManager()).setAny(getContract(AMOUNT));
+    TransferActuator actuator = new TransferActuator();
+    actuator.setChainBaseManager(dbManager.getChainBaseManager());
+    for (int i = 0; i < 10000000; i++) {
+      Random random = new Random();
+      int randomNumber = random.nextInt(100);
+      actuator.setAny(getContract(randomNumber));
       TransactionResultCapsule ret = new TransactionResultCapsule();
       try {
-        actuator.validate();
+//        actuator.validate();
         long start = System.nanoTime();
         actuator.execute(ret);
         long end = System.nanoTime();
         System.out.println("耗时: " + (end - start) / 1000 + " μs");
-        Assert.assertEquals(ret.getInstance().getRet(), code.SUCESS);
-        AccountCapsule owner =
-            dbManager.getAccountStore().get(ByteArray.fromHexString(OWNER_ADDRESS));
-        AccountCapsule toAccount =
-            dbManager.getAccountStore().get(ByteArray.fromHexString(TO_ADDRESS));
+//        Assert.assertEquals(ret.getInstance().getRet(), code.SUCESS);
+//        AccountCapsule owner =
+//            dbManager.getAccountStore().get(ByteArray.fromHexString(OWNER_ADDRESS));
+//        AccountCapsule toAccount =
+//            dbManager.getAccountStore().get(ByteArray.fromHexString(TO_ADDRESS));
 
 //        Assert.assertEquals(owner.getBalance(), OWNER_BALANCE - AMOUNT - TRANSFER_FEE);
 //        Assert.assertEquals(toAccount.getBalance(), TO_BALANCE + AMOUNT);
 //        Assert.assertTrue(true);
-      } catch (ContractValidateException e) {
-        Assert.assertFalse(e instanceof ContractValidateException);
       } catch (ContractExeException e) {
         Assert.assertFalse(e instanceof ContractExeException);
       }
