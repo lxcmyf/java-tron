@@ -234,7 +234,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
           "Signature count is " + (sigs.size()) + " more than key counts of permission : "
               + permission.getKeysCount());
     }
-    HashMap addMap = new HashMap();
+    HashMap<String, Long> addMap = new HashMap<>();
     for (ByteString sig : sigs) {
       if (sig.size() < 65) {
         throw new SignatureFormatException(

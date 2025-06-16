@@ -1,10 +1,14 @@
 package org.tron.core.actuator;
 
 import static junit.framework.TestCase.fail;
+import static org.tron.core.capsule.TransactionCapsule.checkWeight;
+import static org.tron.core.capsule.TransactionCapsule.getOwner;
 import static org.tron.core.config.Parameter.ChainConstant.TRANSFER_FEE;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import java.security.SignatureException;
+import java.util.Arrays;
 import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
@@ -13,20 +17,27 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.tron.common.BaseTest;
+import org.tron.common.parameter.CommonParameter;
 import org.tron.common.runtime.TvmTestUtils;
 import org.tron.common.utils.ByteArray;
+import org.tron.common.utils.LocalWitnesses;
+import org.tron.common.utils.PublicMethod;
 import org.tron.core.Constant;
 import org.tron.core.Wallet;
 import org.tron.core.capsule.AccountCapsule;
+import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.capsule.TransactionResultCapsule;
 import org.tron.core.config.args.Args;
 import org.tron.core.exception.BalanceInsufficientException;
 import org.tron.core.exception.ContractExeException;
 import org.tron.core.exception.ContractValidateException;
+import org.tron.core.exception.PermissionException;
 import org.tron.core.exception.ReceiptCheckErrException;
+import org.tron.core.exception.SignatureFormatException;
 import org.tron.core.exception.VMIllegalException;
 import org.tron.core.store.StoreFactory;
 import org.tron.core.vm.repository.RepositoryImpl;
+import org.tron.protos.Protocol;
 import org.tron.protos.Protocol.AccountType;
 import org.tron.protos.Protocol.Transaction.Result.code;
 import org.tron.protos.contract.AssetIssueContractOuterClass;
@@ -131,6 +142,43 @@ public class TransferActuatorTest extends BaseTest {
       } catch (ContractExeException e) {
         Assert.assertFalse(e instanceof ContractExeException);
       }
+    }
+  }
+
+  private void initLocalWitness() {
+    String randomPrivateKey = PublicMethod.getRandomPrivateKey();
+    LocalWitnesses localWitnesses = new LocalWitnesses();
+    localWitnesses.setPrivateKeys(Arrays.asList(randomPrivateKey));
+    localWitnesses.initWitnessAccountAddress(true);
+    Args.setLocalWitnesses(localWitnesses);
+  }
+
+  @Test
+  public void test() throws PermissionException, SignatureException, SignatureFormatException {
+    initLocalWitness();
+    byte[] address = Args.getLocalWitnesses()
+        .getWitnessAccountAddress(CommonParameter.getInstance().isECKeyCryptoEngine());
+    ByteString addressByte = ByteString.copyFrom(address);
+
+    TransferContract transferContract = TransferContract.newBuilder()
+        .setAmount(1L)
+        .setOwnerAddress(addressByte)
+        .setToAddress(ByteString.copyFrom(ByteArray.fromHexString(TO_ADDRESS)))
+        .build();
+
+    TransactionCapsule transactionCapsule =
+        new TransactionCapsule(transferContract, Protocol.Transaction.Contract.ContractType.TransferContract);
+    transactionCapsule.sign(ByteArray.fromHexString(Args.getLocalWitnesses().getPrivateKey()));
+    Protocol.Transaction transaction = transactionCapsule.getInstance();
+    Protocol.Transaction.Contract contract = transaction.getRawData().getContractList().get(0);
+    byte[] owner = getOwner(contract);
+    Protocol.Permission permission = AccountCapsule.getDefaultPermission(ByteString.copyFrom(owner));
+    byte[] hash = transactionCapsule.getTransactionId().getBytes();
+    for (int i = 0; i < 100; i++) {
+      long s = System.nanoTime();
+      checkWeight(permission, transaction.getSignatureList(), hash, null);
+      long e = System.nanoTime();
+      System.out.println("耗时: " + (e - s) / 1000 + " μs");
     }
   }
 
