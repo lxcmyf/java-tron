@@ -168,7 +168,8 @@ public class TransferActuatorTest extends BaseTest {
       Protocol.Transaction transaction = transactionCapsule.getInstance();
       byte[] hash = transactionCapsule.getTransactionId().getBytes();
       long s = System.nanoTime();
-      validateSignature(ownerAddress, transaction, hash, null, null);
+      boolean validateSignature = validateSignature(ownerAddress, transaction, hash, null, null);
+      System.out.println("validateSignature: " + validateSignature);
       long e = System.nanoTime();
       System.out.println("耗时: " + (e - s) / 1000 + " μs");
     }
