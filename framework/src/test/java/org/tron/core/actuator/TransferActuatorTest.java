@@ -187,7 +187,7 @@ public class TransferActuatorTest extends BaseTest {
   @Test
   public void test() throws InterruptedException, ExecutionException {
     // 总交易数量
-    int totalTransactions = 1_000;
+    int totalTransactions = 1_000000;
     // 每批交易数量
     int batchSize = 1000;
     // 计算总批次数
