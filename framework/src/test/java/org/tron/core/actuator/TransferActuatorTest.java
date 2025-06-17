@@ -217,6 +217,7 @@ public class TransferActuatorTest extends BaseTest {
 
     // 2. 并行验签
     int threadCount = Runtime.getRuntime().availableProcessors();
+    System.out.println("threadCount: " + threadCount);
     ExecutorService executor = Executors.newFixedThreadPool(threadCount);
     CountDownLatch latch = new CountDownLatch(txCount);
 
