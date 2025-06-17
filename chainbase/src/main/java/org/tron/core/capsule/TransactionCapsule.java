@@ -18,6 +18,7 @@ package org.tron.core.capsule;
 import static org.tron.common.utils.StringUtil.encode58Check;
 import static org.tron.common.utils.WalletUtil.checkPermissionOperations;
 import static org.tron.core.Constant.MAX_CONTRACT_RESULT_SIZE;
+import static org.tron.core.capsule.AccountCapsule.createDefaultOwnerPermission;
 import static org.tron.core.exception.P2pException.TypeEnum.PROTOBUF_ERROR;
 
 import com.google.common.primitives.Bytes;
@@ -63,6 +64,7 @@ import org.tron.core.exception.TransactionExpirationException;
 import org.tron.core.exception.ValidateSignatureException;
 import org.tron.core.store.AccountStore;
 import org.tron.core.store.DynamicPropertiesStore;
+import org.tron.protos.Protocol;
 import org.tron.protos.Protocol.Key;
 import org.tron.protos.Protocol.Permission;
 import org.tron.protos.Protocol.Permission.PermissionType;
@@ -466,13 +468,19 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     return signature.toBase64();
   }
 
-  public static boolean validateSignature(Transaction transaction,
+  public static boolean validateSignature(byte[] ownerAddress, Transaction transaction,
       byte[] hash, AccountStore accountStore, DynamicPropertiesStore dynamicPropertiesStore)
       throws PermissionException, SignatureException, SignatureFormatException {
     Transaction.Contract contract = transaction.getRawData().getContractList().get(0);
     int permissionId = contract.getPermissionId();
     byte[] owner = getOwner(contract);
-    AccountCapsule account = accountStore.get(owner);
+    AccountCapsule account = new AccountCapsule(
+        ByteString.copyFromUtf8("owner"),
+        ByteString.copyFrom(ownerAddress),
+        Protocol.AccountType.Normal,
+        999999999);
+    Permission ownerP = createDefaultOwnerPermission(ByteString.copyFrom(ownerAddress));
+    account.setOwnerPermission(ownerP);
     Permission permission = null;
     if (account == null) {
       if (permissionId == 0) {
@@ -489,10 +497,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       throw new PermissionException("permission isn't exit");
     }
     checkPermission(permissionId, permission, contract);
-    long start = System.nanoTime();
     long weight = checkWeight(permission, transaction.getSignatureList(), hash, null);
-    long end = System.nanoTime();
-    System.out.println("耗时: " + (end - start) / 1000 + " μs");
     if (weight >= permission.getThreshold()) {
       return true;
     }
@@ -657,7 +662,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       byte[] hash = getTransactionId().getBytes();
 
       try {
-        if (!validateSignature(this.transaction, hash, accountStore, dynamicPropertiesStore)) {
+        if (!validateSignature(null, this.transaction, hash, accountStore, dynamicPropertiesStore)) {
           isVerified = false;
           throw new ValidateSignatureException("sig error");
         }

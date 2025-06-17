@@ -290,6 +290,10 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     this.account = this.account.toBuilder().setAccountName(ByteString.copyFrom(name)).build();
   }
 
+  public void setOwnerPermission(Permission ownerP) {
+    this.account = this.account.toBuilder().setOwnerPermission(ownerP).build();
+  }
+
   public ByteString getAccountId() {
     return this.account.getAccountId();
   }

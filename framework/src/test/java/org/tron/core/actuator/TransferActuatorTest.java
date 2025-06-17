@@ -1,8 +1,10 @@
 package org.tron.core.actuator;
 
 import static junit.framework.TestCase.fail;
+import static org.tron.common.utils.PublicMethod.getAddressByteByPrivateKey;
 import static org.tron.core.capsule.TransactionCapsule.checkWeight;
 import static org.tron.core.capsule.TransactionCapsule.getOwner;
+import static org.tron.core.capsule.TransactionCapsule.validateSignature;
 import static org.tron.core.config.Parameter.ChainConstant.TRANSFER_FEE;
 
 import com.google.protobuf.Any;
@@ -117,6 +119,7 @@ public class TransferActuatorTest extends BaseTest {
             .setAmount(count)
             .build());
   }
+  @Ignore
   @Test
   public void rightTransfer() {
     TransferActuator actuator = new TransferActuator();
@@ -145,6 +148,29 @@ public class TransferActuatorTest extends BaseTest {
         System.out.println("e:" + e.getMessage());
 //        Assert.assertFalse(e instanceof ContractExeException);
       }
+    }
+  }
+
+  @Test
+  public void test() throws PermissionException, SignatureException, SignatureFormatException {
+    for (int i = 0; i < 100_0000; i++) {
+      String randomPrivateKey = PublicMethod.getRandomPrivateKey();
+      byte[] privateKey = ByteArray.fromHexString(randomPrivateKey);
+      byte[] ownerAddress = getAddressByteByPrivateKey(randomPrivateKey);
+      TransferContract transferContract = TransferContract.newBuilder()
+          .setAmount(1)
+          .setOwnerAddress(ByteString.copyFrom(ownerAddress))
+          .setToAddress(ByteString.copyFrom(ByteArray.fromHexString(TO_ADDRESS)))
+          .build();
+
+      TransactionCapsule transactionCapsule = new TransactionCapsule(transferContract, Protocol.Transaction.Contract.ContractType.TransferContract);
+      transactionCapsule.sign(privateKey);
+      Protocol.Transaction transaction = transactionCapsule.getInstance();
+      byte[] hash = transactionCapsule.getTransactionId().getBytes();
+      long s = System.nanoTime();
+      validateSignature(ownerAddress, transaction, hash, null, null);
+      long e = System.nanoTime();
+      System.out.println("耗时: " + (e - s) / 1000 + " μs");
     }
   }
 
