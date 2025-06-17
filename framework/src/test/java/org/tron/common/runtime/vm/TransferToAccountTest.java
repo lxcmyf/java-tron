@@ -290,10 +290,12 @@ public class TransferToAccountTest extends BaseTest {
 
     VMActuator vmActuator = new VMActuator(true);
     vmActuator.validate(context);
-    long s = System.nanoTime();
-    vmActuator.execute(context);
-    long e = System.nanoTime();
-    System.out.println("耗时: " + (e - s) / 1000 + " μs");
+    for (int i = 0; i < 1000; i++) {
+      long s = System.nanoTime();
+      vmActuator.execute(context);
+      long e = System.nanoTime();
+      System.out.println("耗时: " + (e - s) / 1000 + " μs");
+    }
   }
 
   private byte[] deployTransferContract(long id)
