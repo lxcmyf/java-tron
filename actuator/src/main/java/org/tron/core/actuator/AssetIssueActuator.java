@@ -83,7 +83,7 @@ public class AssetIssueActuator extends AbstractActuator {
             .put(assetIssueCapsuleV2.createDbV2Key(), assetIssueCapsuleV2);
       }
 
-      adjustBalance(accountStore, ownerAddress, -fee);
+      adjustBalance(accountStore, ownerAddress, -fee, true);
       if (dynamicStore.supportBlackHoleOptimization()) {
         dynamicStore.burnTrx(fee);
       } else {

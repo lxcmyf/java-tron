@@ -121,8 +121,8 @@ public class TransferActuatorTest extends BaseTest {
   public void rightTransfer() {
     TransferActuator actuator = new TransferActuator();
     actuator.setChainBaseManager(dbManager.getChainBaseManager());
+    Random random = new Random();
     for (int i = 0; i < 10000000; i++) {
-      Random random = new Random();
       int randomNumber = random.nextInt(100);
       actuator.setAny(getContract(randomNumber));
       TransactionResultCapsule ret = new TransactionResultCapsule();

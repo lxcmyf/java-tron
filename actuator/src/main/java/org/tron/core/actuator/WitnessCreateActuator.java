@@ -139,7 +139,7 @@ public class WitnessCreateActuator extends AbstractActuator {
     }
     accountStore.put(accountCapsule.createDbKey(), accountCapsule);
     long cost = dynamicStore.getAccountUpgradeCost();
-    adjustBalance(accountStore, witnessCreateContract.getOwnerAddress().toByteArray(), -cost);
+    adjustBalance(accountStore, witnessCreateContract.getOwnerAddress().toByteArray(), -cost, true);
     if (dynamicStore.supportBlackHoleOptimization()) {
       dynamicStore.burnTrx(cost);
     } else {

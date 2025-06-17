@@ -47,7 +47,7 @@ public class CreateAccountActuator extends AbstractActuator {
       accountStore
           .put(accountCreateContract.getAccountAddress().toByteArray(), accountCapsule);
 
-      adjustBalance(accountStore, accountCreateContract.getOwnerAddress().toByteArray(), -fee);
+      adjustBalance(accountStore, accountCreateContract.getOwnerAddress().toByteArray(), -fee, true);
       // Add to blackhole address
       if (dynamicStore.supportBlackHoleOptimization()) {
         dynamicStore.burnTrx(fee);

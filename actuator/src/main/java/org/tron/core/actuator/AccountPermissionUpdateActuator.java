@@ -51,7 +51,7 @@ public class AccountPermissionUpdateActuator extends AbstractActuator {
           accountPermissionUpdateContract.getActivesList());
       accountStore.put(ownerAddress, account);
 
-      adjustBalance(accountStore, ownerAddress, -fee);
+      adjustBalance(accountStore, ownerAddress, -fee, true);
       if (chainBaseManager.getDynamicPropertiesStore().supportBlackHoleOptimization()) {
         chainBaseManager.getDynamicPropertiesStore().burnTrx(fee);
       } else {
