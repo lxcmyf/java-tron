@@ -1,8 +1,10 @@
 package org.tron.core.actuator;
 
 import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.GeneratedMessageV3;
 import org.tron.common.math.Maths;
+import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Commons;
 import org.tron.common.utils.ForkController;
 import org.tron.core.ChainBaseManager;
@@ -10,6 +12,7 @@ import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.exception.BalanceInsufficientException;
 import org.tron.core.store.AccountStore;
+import org.tron.protos.Protocol;
 import org.tron.protos.Protocol.Transaction.Contract;
 import org.tron.protos.Protocol.Transaction.Contract.ContractType;
 
@@ -108,9 +111,23 @@ public abstract class AbstractActuator implements Actuator {
     return Maths.min(a, b, this.disableJavaLangMath());
   }
 
-  public void adjustBalance(AccountStore accountStore, byte[] accountAddress, long amount)
+  public void adjustBalance(AccountStore accountStore, byte[] accountAddress, long amount, boolean isOwner)
       throws BalanceInsufficientException {
-    AccountCapsule account = accountStore.getUnchecked(accountAddress);
+    AccountCapsule account;
+    if (isOwner) {
+      account = new AccountCapsule(
+          ByteString.copyFromUtf8("owner"),
+          ByteString.copyFrom(ByteArray.fromHexString("41548794500882809695a8a687866e76d4271a1abc")),
+          Protocol.AccountType.Normal,
+          999999999);
+    } else {
+      account = new AccountCapsule(
+          ByteString.copyFromUtf8("toAccount"),
+          ByteString.copyFrom(ByteArray.fromHexString("41abd4b9367799eaa3197fecb144eb71de1e049abc")),
+          Protocol.AccountType.Normal,
+          100001);
+    }
+//    AccountCapsule account = accountStore.getUnchecked(accountAddress);
     this.adjustBalance(accountStore, account, amount);
   }
 

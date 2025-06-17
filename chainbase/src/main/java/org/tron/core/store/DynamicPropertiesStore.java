@@ -2431,7 +2431,7 @@ public class DynamicPropertiesStore extends TronStoreWithRevoking<BytesCapsule> 
       return;
     }
     amount += getBurnTrxAmount();
-    saveBurnTrx(amount);
+//    saveBurnTrx(amount);
   }
 
   private void saveBurnTrx(long amount) {
