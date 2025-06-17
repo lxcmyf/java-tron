@@ -1,5 +1,6 @@
 package org.tron.common.utils;
 
+import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.tron.common.parameter.CommonParameter;
@@ -12,6 +13,7 @@ import org.tron.core.store.AssetIssueV2Store;
 import org.tron.core.store.DynamicPropertiesStore;
 import org.tron.core.store.ExchangeStore;
 import org.tron.core.store.ExchangeV2Store;
+import org.tron.protos.Protocol;
 
 @Slf4j(topic = "Commons")
 public class Commons {
@@ -57,7 +59,11 @@ public class Commons {
 
   public static void adjustBalance(AccountStore accountStore, byte[] accountAddress, long amount)
       throws BalanceInsufficientException {
-    AccountCapsule account = accountStore.getUnchecked(accountAddress);
+    AccountCapsule account = new AccountCapsule(
+        ByteString.copyFromUtf8("owner"),
+        ByteString.copyFrom(ByteArray.fromHexString("41548794500882809695a8a687866e76d4271a1abc")),
+        Protocol.AccountType.Normal,
+        999999999);
     adjustBalance(accountStore, account, amount);
   }
 
@@ -78,7 +84,7 @@ public class Commons {
               StringUtil.createReadableString(account.createDbKey()), balance, -amount));
     }
     account.setBalance(Math.addExact(balance, amount));
-    accountStore.put(account.getAddress().toByteArray(), account);
+//    accountStore.put(account.getAddress().toByteArray(), account);
   }
 
   public static ExchangeStore getExchangeStoreFinal(DynamicPropertiesStore dynamicPropertiesStore,

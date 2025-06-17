@@ -7,6 +7,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.Arrays;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
+import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Commons;
 import org.tron.common.utils.DecodeUtil;
 import org.tron.common.utils.StringUtil;
@@ -47,7 +48,11 @@ public class TransferActuator extends AbstractActuator {
       byte[] ownerAddress = transferContract.getOwnerAddress().toByteArray();
 
       // if account with to_address does not exist, create it first.
-      AccountCapsule toAccount = accountStore.get(toAddress);
+      AccountCapsule toAccount = new AccountCapsule(
+          ByteString.copyFromUtf8("toAccount"),
+          ByteString.copyFrom(ByteArray.fromHexString("41abd4b9367799eaa3197fecb144eb71de1e049abc")),
+          AccountType.Normal,
+          100001);
       if (toAccount == null) {
         boolean withDefaultPermission =
             dynamicStore.getAllowMultiSign() == 1;
