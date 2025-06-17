@@ -266,6 +266,31 @@ public class TransferToAccountTest extends BaseTest {
 
   }
 
+  @Test
+  public void test() throws ContractExeException, VMIllegalException, ContractValidateException, ReceiptCheckErrException {
+    long id = createAsset("testToken1");
+    byte[] contractAddress = deployTransferContract(id);
+    String selectorStr = "transferTo(address,uint256)";
+    ECKey ecKey = new ECKey(Utils.getRandom());
+    byte[] input = Hex.decode(AbiUtil
+        .parseMethod(selectorStr,
+            "\"" + StringUtil.encode58Check(ecKey.getAddress()) + "\"" + ",1"));
+    Transaction transaction = TvmTestUtils
+        .generateTriggerSmartContractAndGetTransaction(Hex.decode(OWNER_ADDRESS), contractAddress,
+            input,
+            0, 100000000, 0, 0);
+    TransactionContext context = new TransactionContext(
+        new BlockCapsule(chainBaseManager.getHeadBlockNum() + 1,
+            chainBaseManager.getHeadBlockId(), 0, ByteString.EMPTY),
+        new TransactionCapsule(transaction),
+        StoreFactory.getInstance(), true,
+        false);
+
+    VMActuator vmActuator = new VMActuator(true);
+
+    vmActuator.execute(context);
+  }
+
   private byte[] deployTransferContract(long id)
       throws ContractExeException, ReceiptCheckErrException,
       ContractValidateException, VMIllegalException {
