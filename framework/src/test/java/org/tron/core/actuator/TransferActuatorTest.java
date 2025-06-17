@@ -187,7 +187,7 @@ public class TransferActuatorTest extends BaseTest {
 
   @Test
   public void testParallelSignatureValidation() throws Exception {
-    int txCount = 1;
+    int txCount = 10000;
     List<TransactionCapsule> transactions = new ArrayList<>(txCount);
 //    List<byte[]> privateKeys = new ArrayList<>(txCount);
     List<byte[]> ownerAddresses = new ArrayList<>(txCount);
