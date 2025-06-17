@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -185,131 +186,64 @@ public class TransferActuatorTest extends BaseTest {
 //  }
 
   @Test
-  public void test() throws InterruptedException, ExecutionException {
-    // 总交易数量
-    int totalTransactions = 1_000;
-    // 每批交易数量
-    int batchSize = 1000;
-    // 计算总批次数
-    int numBatches = (int) Math.ceil((double) totalTransactions / batchSize);
+  public void testParallelSignatureValidation() throws Exception {
+    int txCount = 1000;
+    List<TransactionCapsule> transactions = new ArrayList<>(txCount);
+//    List<byte[]> privateKeys = new ArrayList<>(txCount);
+    List<byte[]> ownerAddresses = new ArrayList<>(txCount);
+    List<byte[]> hashes = new ArrayList<>(txCount);
 
-    // 创建线程池
-    // 使用可用处理器数量作为线程池大小
-    int numThreads = Runtime.getRuntime().availableProcessors();
-    ExecutorService buildPool = Executors.newFixedThreadPool(numThreads);  // 用于构建交易的线程池
-    ExecutorService validatePool = Executors.newFixedThreadPool(numThreads); // 用于验证签名的线程池
+    // 1. 串行构造交易
+    for (int i = 0; i < txCount; i++) {
+      String randomPrivateKey = PublicMethod.getRandomPrivateKey();
+      byte[] privateKey = ByteArray.fromHexString(randomPrivateKey);
+      byte[] ownerAddress = getAddressByteByPrivateKey(randomPrivateKey);
 
-    try {
-      // ==================== 第一阶段：并行构建交易 ====================
-      System.out.println("开始并行构建交易...");
-      List<Future<TransactionCapsule>> buildFutures = new ArrayList<>();
+      TransferContract transferContract = TransferContract.newBuilder()
+          .setAmount(1)
+          .setOwnerAddress(ByteString.copyFrom(ownerAddress))
+          .setToAddress(ByteString.copyFrom(ByteArray.fromHexString(TO_ADDRESS)))
+          .build();
 
-      // 提交构建交易的任务到线程池
-      for (int i = 0; i < totalTransactions; i++) {
-        final int index = i;
-        Future<TransactionCapsule> future = buildPool.submit(() -> {
-          try {
-            // 生成随机私钥
-            String randomPrivateKey = PublicMethod.getRandomPrivateKey();
-            // 将十六进制私钥转换为字节数组
-            byte[] privateKey = ByteArray.fromHexString(randomPrivateKey);
-            // 根据私钥获取所有者地址
-            byte[] ownerAddress = getAddressByteByPrivateKey(randomPrivateKey);
+      TransactionCapsule txCapsule = new TransactionCapsule(
+          transferContract, Protocol.Transaction.Contract.ContractType.TransferContract);
+      txCapsule.sign(privateKey);
 
-            // 构建转账合约
-            TransferContract transferContract = TransferContract.newBuilder()
-                .setAmount(1)  // 设置转账金额
-                .setOwnerAddress(ByteString.copyFrom(ownerAddress))  // 设置所有者地址
-                .setToAddress(ByteString.copyFrom(ByteArray.fromHexString(TO_ADDRESS)))  // 设置接收地址
-                .build();
-
-            // 创建交易胶囊并签名
-            TransactionCapsule transactionCapsule = new TransactionCapsule(
-                transferContract,
-                Protocol.Transaction.Contract.ContractType.TransferContract
-            );
-            transactionCapsule.sign(privateKey);
-
-            return transactionCapsule;
-          } catch (Exception e) {
-            throw new RuntimeException("构建交易[" + index + "]失败", e);
-          }
-        });
-        buildFutures.add(future);
-      }
-
-      // 收集所有构建好的交易
-      List<TransactionCapsule> transactionCapsules = new ArrayList<>(totalTransactions);
-      for (Future<TransactionCapsule> future : buildFutures) {
-        transactionCapsules.add(future.get());  // 等待每个任务完成并获取结果
-      }
-      System.out.println("交易构建完成，共构建 " + transactionCapsules.size() + " 笔交易");
-
-      // ==================== 第二阶段：并行批量验证签名 ====================
-      System.out.println("开始并行批量验证签名...");
-      List<Future<?>> batchFutures = new ArrayList<>();
-
-      // 提交批量验证任务到线程池
-      for (int batchIndex = 0; batchIndex < numBatches; batchIndex++) {
-        final int currentBatchIndex = batchIndex;
-        // 计算当前批次的起始和结束索引
-        int start = batchIndex * batchSize;
-        int end = Math.min(start + batchSize, totalTransactions);
-        // 获取当前批次的交易列表
-        List<TransactionCapsule> batch = transactionCapsules.subList(start, end);
-
-        Future<?> batchFuture = validatePool.submit(() -> {
-          long batchStart = System.nanoTime();  // 记录批次开始时间
-
-          try {
-            System.out.println("开始验证批次 " + currentBatchIndex + "，包含 " + batch.size() + " 笔交易");
-
-            // 顺序验证当前批次中的所有交易
-            for (TransactionCapsule capsule : batch) {
-              try {
-                Protocol.Transaction transaction = capsule.getInstance();
-                byte[] hash = capsule.getTransactionId().getBytes();
-                // 验证签名
-                validateSignature(capsule.getOwnerAddress(), transaction, hash, null, null);
-              } catch (Exception e) {
-                System.err.println("验证批次 " + currentBatchIndex + " 中的交易失败");
-                throw e;
-              }
-            }
-
-            long batchEnd = System.nanoTime();  // 记录批次结束时间
-            // 计算并打印批次耗时
-            System.out.println("耗时: " + (batchEnd - batchStart) / 1000 + " μs");
-          } catch (Exception e) {
-            throw new RuntimeException("验证批次 " + currentBatchIndex + " 失败", e);
-          }
-        });
-
-        batchFutures.add(batchFuture);
-      }
-
-      // 等待所有批次验证任务完成
-      for (Future<?> future : batchFutures) {
-        future.get();
-      }
-      System.out.println("所有批次验证完成");
-
-    } finally {
-      // ==================== 第三阶段：关闭线程池 ====================
-      // 优雅关闭线程池
-      buildPool.shutdown();
-      validatePool.shutdown();
-
-      // 等待线程池中的任务完成
-      if (!buildPool.awaitTermination(60, TimeUnit.SECONDS)) {
-        buildPool.shutdownNow();
-      }
-      if (!validatePool.awaitTermination(60, TimeUnit.SECONDS)) {
-        validatePool.shutdownNow();
-      }
+      transactions.add(txCapsule);
+//      privateKeys.add(privateKey);
+      ownerAddresses.add(ownerAddress);
+      hashes.add(txCapsule.getTransactionId().getBytes());
     }
 
-    System.out.println("测试完成，共处理 " + totalTransactions + " 笔交易");
+    // 2. 并行验签
+    int threadCount = Runtime.getRuntime().availableProcessors();
+    ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+    CountDownLatch latch = new CountDownLatch(txCount);
+
+    for (int i = 0; i < txCount; i++) {
+      final int index = i;
+      executor.submit(() -> {
+        try {
+          long s = System.nanoTime();
+          validateSignature(
+              ownerAddresses.get(index),
+              transactions.get(index).getInstance(),
+              hashes.get(index),
+              null,
+              null
+          );
+          long e = System.nanoTime();
+          System.out.println("耗时: " + (e - s) / 1000 + " μs");
+        } catch (Exception e) {
+          e.printStackTrace();
+        } finally {
+          latch.countDown();
+        }
+      });
+    }
+
+    latch.await(); // 等待所有验签完成
+    executor.shutdown();
   }
 
   @Ignore
