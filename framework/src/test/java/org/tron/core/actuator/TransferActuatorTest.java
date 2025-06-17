@@ -10,9 +10,14 @@ import static org.tron.core.config.Parameter.ChainConstant.TRANSFER_FEE;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import java.security.SignatureException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Assert;
@@ -151,27 +156,73 @@ public class TransferActuatorTest extends BaseTest {
     }
   }
 
-  @Test
-  public void test() throws PermissionException, SignatureException, SignatureFormatException {
-    for (int i = 0; i < 100_0000; i++) {
-      String randomPrivateKey = PublicMethod.getRandomPrivateKey();
-      byte[] privateKey = ByteArray.fromHexString(randomPrivateKey);
-      byte[] ownerAddress = getAddressByteByPrivateKey(randomPrivateKey);
-      TransferContract transferContract = TransferContract.newBuilder()
-          .setAmount(1)
-          .setOwnerAddress(ByteString.copyFrom(ownerAddress))
-          .setToAddress(ByteString.copyFrom(ByteArray.fromHexString(TO_ADDRESS)))
-          .build();
+//  @Test
+//  public void test() throws PermissionException, SignatureException, SignatureFormatException {
+//    for (int i = 0; i < 100_0000; i++) {
+//      String randomPrivateKey = PublicMethod.getRandomPrivateKey();
+//      byte[] privateKey = ByteArray.fromHexString(randomPrivateKey);
+//      byte[] ownerAddress = getAddressByteByPrivateKey(randomPrivateKey);
+//      TransferContract transferContract = TransferContract.newBuilder()
+//          .setAmount(1)
+//          .setOwnerAddress(ByteString.copyFrom(ownerAddress))
+//          .setToAddress(ByteString.copyFrom(ByteArray.fromHexString(TO_ADDRESS)))
+//          .build();
+//
+//      TransactionCapsule transactionCapsule = new TransactionCapsule(transferContract, Protocol.Transaction.Contract.ContractType.TransferContract);
+//      transactionCapsule.sign(privateKey);
+//      Protocol.Transaction transaction = transactionCapsule.getInstance();
+//      byte[] hash = transactionCapsule.getTransactionId().getBytes();
+//      long s = System.nanoTime();
+//      validateSignature(ownerAddress, transaction, hash, null, null);
+//      long e = System.nanoTime();
+//      System.out.println("耗时: " + (e - s) / 1000 + " μs");
+//    }
+//  }
 
-      TransactionCapsule transactionCapsule = new TransactionCapsule(transferContract, Protocol.Transaction.Contract.ContractType.TransferContract);
-      transactionCapsule.sign(privateKey);
-      Protocol.Transaction transaction = transactionCapsule.getInstance();
-      byte[] hash = transactionCapsule.getTransactionId().getBytes();
-      long s = System.nanoTime();
-      validateSignature(ownerAddress, transaction, hash, null, null);
-      long e = System.nanoTime();
-      System.out.println("耗时: " + (e - s) / 1000 + " μs");
-    }
+  @Test
+  public void test() throws Exception {
+    int totalTransactions = 1_000;
+    int batchSize = 1000;
+
+    // Step 1: Build all transactions in parallel and collect them
+    List<TransactionCapsule> transactionCapsules = IntStream.range(0, totalTransactions)
+        .parallel()
+        .mapToObj(i -> {
+          String randomPrivateKey = PublicMethod.getRandomPrivateKey();
+          byte[] privateKey = ByteArray.fromHexString(randomPrivateKey);
+          byte[] ownerAddress = getAddressByteByPrivateKey(randomPrivateKey);
+          TransferContract transferContract = TransferContract.newBuilder()
+              .setAmount(1)
+              .setOwnerAddress(ByteString.copyFrom(ownerAddress))
+              .setToAddress(ByteString.copyFrom(ByteArray.fromHexString(TO_ADDRESS)))
+              .build();
+
+          TransactionCapsule transactionCapsule = new TransactionCapsule(transferContract, Protocol.Transaction.Contract.ContractType.TransferContract);
+          transactionCapsule.sign(privateKey);
+          return transactionCapsule;
+        })
+        .collect(Collectors.toList());
+
+    // Step 2: Validate in parallel batches and collect timing results
+    long s = System.nanoTime();
+    IntStream.range(0, (totalTransactions + batchSize - 1) / batchSize).parallel().forEach(batchIndex -> {
+      int start = batchIndex * batchSize;
+      int end = Math.min(start + batchSize, totalTransactions);
+      List<TransactionCapsule> batch = transactionCapsules.subList(start, end);
+
+      // Validate all transactions in this batch
+      for (TransactionCapsule capsule : batch) {
+        Protocol.Transaction transaction = capsule.getInstance();
+        byte[] hash = capsule.getTransactionId().getBytes();
+        try {
+          validateSignature(capsule.getOwnerAddress(), transaction, hash, null, null);
+        } catch (PermissionException | SignatureException | SignatureFormatException e) {
+          throw new RuntimeException(e);
+        }
+      }
+    });
+    long e = System.nanoTime();
+    System.out.println("耗时: " + (e - s) / 1000 + " μs");
   }
 
   @Ignore

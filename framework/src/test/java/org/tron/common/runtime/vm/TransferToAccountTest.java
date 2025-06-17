@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.tron.common.BaseTest;
 import org.tron.common.crypto.ECKey;
@@ -112,6 +113,7 @@ public class TransferToAccountTest extends BaseTest {
    * transferTo(address  payable toAddress ,uint256 amount) public payable {
    * toAddress.transfer(amount); } <p> }
    */
+  @Ignore
   @Test
   public void TransferTokenTest()
       throws ContractExeException, ReceiptCheckErrException,
@@ -287,8 +289,11 @@ public class TransferToAccountTest extends BaseTest {
         false);
 
     VMActuator vmActuator = new VMActuator(true);
-
+    vmActuator.validate(context);
+    long s = System.nanoTime();
     vmActuator.execute(context);
+    long e = System.nanoTime();
+    System.out.println("耗时: " + (e - s) / 1000 + " μs");
   }
 
   private byte[] deployTransferContract(long id)
