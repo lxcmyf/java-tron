@@ -220,11 +220,11 @@ public class TransferActuatorTest extends BaseTest {
     ExecutorService executor = Executors.newFixedThreadPool(threadCount);
     CountDownLatch latch = new CountDownLatch(txCount);
 
+    long s = System.nanoTime();
     for (int i = 0; i < txCount; i++) {
       final int index = i;
       executor.submit(() -> {
         try {
-          long s = System.nanoTime();
           validateSignature(
               ownerAddresses.get(index),
               transactions.get(index).getInstance(),
@@ -232,8 +232,7 @@ public class TransferActuatorTest extends BaseTest {
               null,
               null
           );
-          long e = System.nanoTime();
-          System.out.println("耗时: " + (e - s) / 1000 + " μs");
+
         } catch (Exception e) {
           e.printStackTrace();
         } finally {
@@ -243,6 +242,8 @@ public class TransferActuatorTest extends BaseTest {
     }
 
     latch.await(); // 等待所有验签完成
+    long e = System.nanoTime();
+    System.out.println("耗时: " + (e - s) / 1000 + " μs");
     executor.shutdown();
   }
 
