@@ -68,7 +68,7 @@ public class ScanDB {
     ExecutorService executor = Executors.newFixedThreadPool(threadCount);
     CountDownLatch latch = new CountDownLatch(txCount);
 
-    long s = System.nanoTime();
+    long s = System.currentTimeMillis();
     for (int i = 0; i < txCount; i++) {
       final int index = i;
       executor.submit(() -> {
@@ -90,8 +90,8 @@ public class ScanDB {
     }
 
     latch.await(); // 等待所有验签完成
-    long e = System.nanoTime();
-    System.out.println("耗时: " + (e - s) / 1000 + " μs");
+    long e = System.currentTimeMillis();
+    System.out.println("耗时: " + (e - s) + " ms");
     executor.shutdown();
 
   }
