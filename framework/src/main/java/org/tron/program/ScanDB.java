@@ -32,7 +32,7 @@ public class ScanDB {
   private static final String TO_ADDRESS = Wallet.getAddressPreFixString() + "abd4b9367799eaa3197fecb144eb71de1e049abc";
   public static void main(String[] args) throws IOException, InterruptedException {
 
-    int txCount = 10_0000; // 总交易数量改为100万笔
+    int txCount = 10_000; // 总交易数量改为100万笔
     int batchSize = 1000;  // 每批交易数量
 //    int batchCount = txCount / batchSize; // 计算批次数量
 
