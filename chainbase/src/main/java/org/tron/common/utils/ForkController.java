@@ -57,9 +57,9 @@ public class ForkController {
   }
 
   public synchronized boolean pass(int version) {
-    if (manager == null) {
-      throw new IllegalStateException("not inited");
-    }
+//    if (manager == null) {
+//      throw new IllegalStateException("not inited");
+//    }
     if (version > ForkBlockVersionEnum.VERSION_4_0.getValue()) {
       return passNew(version);
     } else {
