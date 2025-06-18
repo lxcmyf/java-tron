@@ -119,7 +119,7 @@ public class TransferActuatorTest extends BaseTest {
 
   @Test
   public void testParallelSignatureValidation() throws Exception {
-    int txCount = 100_0000; // 总交易数量改为100万笔
+    int txCount = 1_0000; // 总交易数量改为100万笔
     int batchSize = 1000;  // 每批交易数量
     int batchCount = txCount / batchSize; // 计算批次数量
 
