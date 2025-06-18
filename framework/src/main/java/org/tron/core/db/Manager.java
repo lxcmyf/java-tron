@@ -2021,7 +2021,7 @@ public class Manager {
     Histogram.Timer requestTimer = Metrics.histogramStartTimer(
         MetricKeys.Histogram.VERIFY_SIGN_LATENCY, MetricLabels.TRX);
     try {
-      final long s = System.currentTimeMillis();
+      final long s = System.nanoTime();
       CountDownLatch countDownLatch = new CountDownLatch(transSize);
       List<Future<Boolean>> futures = new ArrayList<>(transSize);
       for (int i = 0; i < txs.size(); i++) {
@@ -2043,8 +2043,8 @@ public class Manager {
           throw new ValidateSignatureException(e.getCause().getMessage());
         }
       }
-      long e = System.currentTimeMillis();
-      System.out.println(" 并行验签耗时: " + (e - s)+ " ms");
+      long e = System.nanoTime();
+      System.out.println("耗时: " + (e - s)+ " ns");
     } finally {
       Metrics.histogramObserve(requestTimer);
     }
