@@ -116,37 +116,39 @@ public class TransferActuatorTest extends BaseTest {
             .setAmount(count)
             .build());
   }
+
   @Test
   public void testParallelSignatureValidation() throws Exception {
-    int txCount = 1000;
-    List<TransactionCapsule> transactions = new ArrayList<>(txCount);
+    for (int j = 0; j < 10; j++) {
+      int txCount = 1000;
+      List<TransactionCapsule> transactions = new ArrayList<>(txCount);
 //    List<byte[]> privateKeys = new ArrayList<>(txCount);
-    List<byte[]> ownerAddresses = new ArrayList<>(txCount);
+      List<byte[]> ownerAddresses = new ArrayList<>(txCount);
 //    List<byte[]> hashes = new ArrayList<>(txCount);
 
-    // 1. 串行构造交易
-    for (int i = 0; i < txCount; i++) {
-      String randomPrivateKey = PublicMethod.getRandomPrivateKey();
-      byte[] privateKey = ByteArray.fromHexString(randomPrivateKey);
-      byte[] ownerAddress = getAddressByteByPrivateKey(randomPrivateKey);
+      // 1. 串行构造交易
+      for (int i = 0; i < txCount; i++) {
+        String randomPrivateKey = PublicMethod.getRandomPrivateKey();
+        byte[] privateKey = ByteArray.fromHexString(randomPrivateKey);
+        byte[] ownerAddress = getAddressByteByPrivateKey(randomPrivateKey);
 
-      TransferContract transferContract = TransferContract.newBuilder()
-          .setAmount(1)
-          .setOwnerAddress(ByteString.copyFrom(ownerAddress))
-          .setToAddress(ByteString.copyFrom(ByteArray.fromHexString(TO_ADDRESS)))
-          .build();
+        TransferContract transferContract = TransferContract.newBuilder()
+            .setAmount(1)
+            .setOwnerAddress(ByteString.copyFrom(ownerAddress))
+            .setToAddress(ByteString.copyFrom(ByteArray.fromHexString(TO_ADDRESS)))
+            .build();
 
-      TransactionCapsule txCapsule = new TransactionCapsule(
-          transferContract, Protocol.Transaction.Contract.ContractType.TransferContract);
-      txCapsule.sign(privateKey);
+        TransactionCapsule txCapsule = new TransactionCapsule(
+            transferContract, Protocol.Transaction.Contract.ContractType.TransferContract);
+        txCapsule.sign(privateKey);
 
-      transactions.add(txCapsule);
+        transactions.add(txCapsule);
 //      privateKeys.add(privateKey);
-      ownerAddresses.add(ownerAddress);
+        ownerAddresses.add(ownerAddress);
 //      hashes.add(txCapsule.getTransactionId().getBytes());
-    }
-    Thread.sleep(3000);
-    for (int i = 0; i < 1001; i++) {
+      }
+      Thread.sleep(3000);
+
       dbManager.preValidateTransactionSign(ownerAddresses, transactions);
     }
   }
@@ -205,7 +207,7 @@ public class TransferActuatorTest extends BaseTest {
 //    }
 //    dbManager.preValidateTransactionSign(ownerAddresses, transactions);
 
-    // 2. 并行验签
+  // 2. 并行验签
 //    int threadCount = Runtime.getRuntime().availableProcessors();
 //    System.out.println("threadCount: " + threadCount);
 //    ExecutorService executor = Executors.newFixedThreadPool(threadCount);
@@ -352,6 +354,7 @@ public class TransferActuatorTest extends BaseTest {
     }
 
   }
+
   @Ignore
   @Test
   public void iniviateTrx() {
@@ -379,6 +382,7 @@ public class TransferActuatorTest extends BaseTest {
     }
 
   }
+
   @Ignore
   @Test
   public void noExitOwnerAccount() {
@@ -405,6 +409,7 @@ public class TransferActuatorTest extends BaseTest {
     }
 
   }
+
   @Ignore
   @Test
   /**
@@ -442,6 +447,7 @@ public class TransferActuatorTest extends BaseTest {
       dbManager.getAccountStore().delete(ByteArray.fromHexString(To_ACCOUNT_INVALID));
     }
   }
+
   @Ignore
   @Test
   public void zeroAmountTest() {
@@ -467,6 +473,7 @@ public class TransferActuatorTest extends BaseTest {
       Assert.assertFalse(e instanceof ContractExeException);
     }
   }
+
   @Ignore
   @Test
   public void negativeAmountTest() {
@@ -492,6 +499,7 @@ public class TransferActuatorTest extends BaseTest {
       Assert.assertFalse(e instanceof ContractExeException);
     }
   }
+
   @Ignore
   @Test
   public void addOverflowTest() {
@@ -519,6 +527,7 @@ public class TransferActuatorTest extends BaseTest {
       Assert.assertFalse(e instanceof ContractExeException);
     }
   }
+
   @Ignore
   @Test
   public void insufficientFee() {
@@ -562,6 +571,7 @@ public class TransferActuatorTest extends BaseTest {
       dbManager.getAccountStore().delete(ByteArray.fromHexString(To_ACCOUNT_INVALID));
     }
   }
+
   @Ignore
   @Test
   public void commonErrorCheck() {
@@ -582,6 +592,7 @@ public class TransferActuatorTest extends BaseTest {
     actuatorTest.setNullDBManagerMsg("No account store or dynamic store!");
     actuatorTest.nullDBManger();
   }
+
   @Ignore
   @Test
   public void transferToSmartContractAddress()
