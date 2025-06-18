@@ -118,7 +118,7 @@ public class TransferActuatorTest extends BaseTest {
   }
   @Test
   public void testParallelSignatureValidation() throws Exception {
-    int txCount = 100000;
+    int txCount = 1000;
     List<TransactionCapsule> transactions = new ArrayList<>(txCount);
 //    List<byte[]> privateKeys = new ArrayList<>(txCount);
     List<byte[]> ownerAddresses = new ArrayList<>(txCount);
@@ -146,7 +146,7 @@ public class TransferActuatorTest extends BaseTest {
 //      hashes.add(txCapsule.getTransactionId().getBytes());
     }
     Thread.sleep(3000);
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 100; i++) {
       dbManager.preValidateTransactionSign(ownerAddresses, transactions);
     }
   }
