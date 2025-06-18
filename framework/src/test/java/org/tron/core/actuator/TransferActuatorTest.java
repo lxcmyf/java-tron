@@ -119,39 +119,79 @@ public class TransferActuatorTest extends BaseTest {
 
   @Test
   public void testParallelSignatureValidation() throws Exception {
-    for (int j = 0; j < 10; j++) {
-      int txCount = 1000;
-      List<TransactionCapsule> transactions = new ArrayList<>(txCount);
-//    List<byte[]> privateKeys = new ArrayList<>(txCount);
-      List<byte[]> ownerAddresses = new ArrayList<>(txCount);
-//    List<byte[]> hashes = new ArrayList<>(txCount);
+    int txCount = 10000; // 总交易数量改为100万笔
+    int batchSize = 1000;  // 每批交易数量
+    int batchCount = txCount / batchSize; // 计算批次数量
 
-      // 1. 串行构造交易
-      for (int i = 0; i < txCount; i++) {
-        String randomPrivateKey = PublicMethod.getRandomPrivateKey();
-        byte[] privateKey = ByteArray.fromHexString(randomPrivateKey);
-        byte[] ownerAddress = getAddressByteByPrivateKey(randomPrivateKey);
+    List<TransactionCapsule> transactions = new ArrayList<>(txCount);
+    List<byte[]> ownerAddresses = new ArrayList<>(txCount);
 
-        TransferContract transferContract = TransferContract.newBuilder()
-            .setAmount(1)
-            .setOwnerAddress(ByteString.copyFrom(ownerAddress))
-            .setToAddress(ByteString.copyFrom(ByteArray.fromHexString(TO_ADDRESS)))
-            .build();
+    // 1. 串行构造交易
+    for (int i = 0; i < txCount; i++) {
+      String randomPrivateKey = PublicMethod.getRandomPrivateKey();
+      byte[] privateKey = ByteArray.fromHexString(randomPrivateKey);
+      byte[] ownerAddress = getAddressByteByPrivateKey(randomPrivateKey);
 
-        TransactionCapsule txCapsule = new TransactionCapsule(
-            transferContract, Protocol.Transaction.Contract.ContractType.TransferContract);
-        txCapsule.sign(privateKey);
+      TransferContract transferContract = TransferContract.newBuilder()
+          .setAmount(1)
+          .setOwnerAddress(ByteString.copyFrom(ownerAddress))
+          .setToAddress(ByteString.copyFrom(ByteArray.fromHexString(TO_ADDRESS)))
+          .build();
 
-        transactions.add(txCapsule);
-//      privateKeys.add(privateKey);
-        ownerAddresses.add(ownerAddress);
-//      hashes.add(txCapsule.getTransactionId().getBytes());
-      }
-      Thread.sleep(3000);
+      TransactionCapsule txCapsule = new TransactionCapsule(
+          transferContract, Protocol.Transaction.Contract.ContractType.TransferContract);
+      txCapsule.sign(privateKey);
 
-      dbManager.preValidateTransactionSign(ownerAddresses, transactions);
+      transactions.add(txCapsule);
+      ownerAddresses.add(ownerAddress);
+    }
+
+    Thread.sleep(3000);
+
+    // 2. 分批执行preValidateTransactionSign
+    for (int batchIndex = 0; batchIndex < batchCount; batchIndex++) {
+      int fromIndex = batchIndex * batchSize;
+      int toIndex = Math.min(fromIndex + batchSize, txCount);
+
+      // 获取当前批次的交易和地址
+      List<TransactionCapsule> batchTransactions = transactions.subList(fromIndex, toIndex);
+      List<byte[]> batchOwnerAddresses = ownerAddresses.subList(fromIndex, toIndex);
+
+      // 执行验证
+      dbManager.preValidateTransactionSign(batchOwnerAddresses, batchTransactions);
     }
   }
+
+//  @Test
+//  public void testParallelSignatureValidation() throws Exception {
+//    int txCount = 1000;
+//    List<TransactionCapsule> transactions = new ArrayList<>(txCount);
+//    List<byte[]> ownerAddresses = new ArrayList<>(txCount);
+//
+//    // 1. 串行构造交易
+//    for (int i = 0; i < txCount; i++) {
+//      String randomPrivateKey = PublicMethod.getRandomPrivateKey();
+//      byte[] privateKey = ByteArray.fromHexString(randomPrivateKey);
+//      byte[] ownerAddress = getAddressByteByPrivateKey(randomPrivateKey);
+//
+//      TransferContract transferContract = TransferContract.newBuilder()
+//          .setAmount(1)
+//          .setOwnerAddress(ByteString.copyFrom(ownerAddress))
+//          .setToAddress(ByteString.copyFrom(ByteArray.fromHexString(TO_ADDRESS)))
+//          .build();
+//
+//      TransactionCapsule txCapsule = new TransactionCapsule(
+//          transferContract, Protocol.Transaction.Contract.ContractType.TransferContract);
+//      txCapsule.sign(privateKey);
+//
+//      transactions.add(txCapsule);
+//      ownerAddresses.add(ownerAddress);
+//    }
+//
+//    Thread.sleep(3000);
+//
+//    dbManager.preValidateTransactionSign(ownerAddresses, transactions);
+//  }
 
 //  @Test
 //  public void test() throws PermissionException, SignatureException, SignatureFormatException {
