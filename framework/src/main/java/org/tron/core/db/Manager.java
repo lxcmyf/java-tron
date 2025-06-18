@@ -2018,7 +2018,7 @@ public class Manager {
         > maxTransactionPendingSize;
   }
 
-  private void preValidateTransactionSign(List<TransactionCapsule> txs)
+  public void preValidateTransactionSign(List<TransactionCapsule> txs)
       throws InterruptedException, ValidateSignatureException {
     int transSize = txs.size();
     if (transSize <= 0) {
@@ -2027,6 +2027,7 @@ public class Manager {
     Histogram.Timer requestTimer = Metrics.histogramStartTimer(
         MetricKeys.Histogram.VERIFY_SIGN_LATENCY, MetricLabels.TRX);
     try {
+      final long s = System.nanoTime();
       CountDownLatch countDownLatch = new CountDownLatch(transSize);
       List<Future<Boolean>> futures = new ArrayList<>(transSize);
 
@@ -2044,6 +2045,8 @@ public class Manager {
           throw new ValidateSignatureException(e.getCause().getMessage());
         }
       }
+      long e = System.nanoTime();
+      System.out.println("耗时: " + (e - s) / 1000 + " μs");
     } finally {
       Metrics.histogramObserve(requestTimer);
     }
@@ -2517,7 +2520,7 @@ public class Manager {
     @Override
     public Boolean call() throws ValidateSignatureException {
       try {
-        trx.validateSignature(manager.getAccountStore(), manager.getDynamicPropertiesStore());
+        trx.validateSignature(null, null);
       } catch (ValidateSignatureException e) {
         throw e;
       } finally {

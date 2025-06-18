@@ -89,7 +89,7 @@ public class Commons {
               StringUtil.createReadableString(account.createDbKey()), balance, -amount));
     }
     account.setBalance(addExact(balance, amount, useStrict));
-//    accountStore.put(account.getAddress().toByteArray(), account);
+    accountStore.put(account.getAddress().toByteArray(), account);
   }
 
   public static ExchangeStore getExchangeStoreFinal(DynamicPropertiesStore dynamicPropertiesStore,

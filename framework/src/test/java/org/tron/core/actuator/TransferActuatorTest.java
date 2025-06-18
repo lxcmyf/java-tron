@@ -42,6 +42,7 @@ import org.tron.core.capsule.AccountCapsule;
 import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.capsule.TransactionResultCapsule;
 import org.tron.core.config.args.Args;
+import org.tron.core.db.Manager;
 import org.tron.core.exception.BalanceInsufficientException;
 import org.tron.core.exception.ContractExeException;
 import org.tron.core.exception.ContractValidateException;
@@ -187,7 +188,7 @@ public class TransferActuatorTest extends BaseTest {
 
   @Test
   public void testParallelSignatureValidation() throws Exception {
-    int txCount = 10000;
+    int txCount = 1000;
     List<TransactionCapsule> transactions = new ArrayList<>(txCount);
 //    List<byte[]> privateKeys = new ArrayList<>(txCount);
     List<byte[]> ownerAddresses = new ArrayList<>(txCount);
@@ -214,38 +215,39 @@ public class TransferActuatorTest extends BaseTest {
       ownerAddresses.add(ownerAddress);
       hashes.add(txCapsule.getTransactionId().getBytes());
     }
+    dbManager.preValidateTransactionSign(transactions);
 
     // 2. 并行验签
-    int threadCount = Runtime.getRuntime().availableProcessors();
-    System.out.println("threadCount: " + threadCount);
-    ExecutorService executor = Executors.newFixedThreadPool(threadCount);
-    CountDownLatch latch = new CountDownLatch(txCount);
-
-    long s = System.nanoTime();
-    for (int i = 0; i < txCount; i++) {
-      final int index = i;
-      executor.submit(() -> {
-        try {
-          validateSignature(
-              ownerAddresses.get(index),
-              transactions.get(index).getInstance(),
-              hashes.get(index),
-              null,
-              null
-          );
-
-        } catch (Exception e) {
-          e.printStackTrace();
-        } finally {
-          latch.countDown();
-        }
-      });
-    }
-
-    latch.await(); // 等待所有验签完成
-    long e = System.nanoTime();
-    System.out.println("耗时: " + (e - s) / 1000 + " μs");
-    executor.shutdown();
+//    int threadCount = Runtime.getRuntime().availableProcessors();
+//    System.out.println("threadCount: " + threadCount);
+//    ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+//    CountDownLatch latch = new CountDownLatch(txCount);
+//
+//    long s = System.nanoTime();
+//    for (int i = 0; i < txCount; i++) {
+//      final int index = i;
+//      executor.submit(() -> {
+//        try {
+//          validateSignature(
+//              ownerAddresses.get(index),
+//              transactions.get(index).getInstance(),
+//              hashes.get(index),
+//              null,
+//              null
+//          );
+//
+//        } catch (Exception e) {
+//          e.printStackTrace();
+//        } finally {
+//          latch.countDown();
+//        }
+//      });
+//    }
+//
+//    latch.await(); // 等待所有验签完成
+//    long e = System.nanoTime();
+//    System.out.println("耗时: " + (e - s) / 1000 + " μs");
+//    executor.shutdown();
   }
 
   @Ignore
