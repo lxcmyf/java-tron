@@ -146,7 +146,7 @@ public class TransferActuatorTest extends BaseTest {
 //      hashes.add(txCapsule.getTransactionId().getBytes());
     }
     Thread.sleep(3000);
-    for (int i = 0; i < 101; i++) {
+    for (int i = 0; i < 1001; i++) {
       dbManager.preValidateTransactionSign(ownerAddresses, transactions);
     }
   }
