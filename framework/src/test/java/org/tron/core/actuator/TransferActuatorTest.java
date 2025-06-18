@@ -122,7 +122,7 @@ public class TransferActuatorTest extends BaseTest {
     List<TransactionCapsule> transactions = new ArrayList<>(txCount);
 //    List<byte[]> privateKeys = new ArrayList<>(txCount);
     List<byte[]> ownerAddresses = new ArrayList<>(txCount);
-    List<byte[]> hashes = new ArrayList<>(txCount);
+//    List<byte[]> hashes = new ArrayList<>(txCount);
 
     // 1. 串行构造交易
     for (int i = 0; i < txCount; i++) {
@@ -143,9 +143,12 @@ public class TransferActuatorTest extends BaseTest {
       transactions.add(txCapsule);
 //      privateKeys.add(privateKey);
       ownerAddresses.add(ownerAddress);
-      hashes.add(txCapsule.getTransactionId().getBytes());
+//      hashes.add(txCapsule.getTransactionId().getBytes());
     }
-    dbManager.preValidateTransactionSign(ownerAddresses, transactions);
+    Thread.sleep(3000);
+    for (int i = 0; i < 10; i++) {
+      dbManager.preValidateTransactionSign(ownerAddresses, transactions);
+    }
   }
 
 //  @Test
