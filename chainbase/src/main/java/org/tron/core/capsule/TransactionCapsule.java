@@ -646,7 +646,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
   /**
    * validate signature
    */
-  public boolean validatePubSignature(AccountStore accountStore,
+  public boolean validatePubSignature(byte[] ownerAddress, AccountStore accountStore,
       DynamicPropertiesStore dynamicPropertiesStore)
       throws ValidateSignatureException {
     if (!isVerified) {
@@ -654,15 +654,14 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
               || this.transaction.getRawData().getContractCount() <= 0) {
         throw new ValidateSignatureException("miss sig or contract");
       }
-      if (this.transaction.getSignatureCount() > dynamicPropertiesStore
-              .getTotalSignNum()) {
+      if (this.transaction.getSignatureCount() > 1) {
         throw new ValidateSignatureException("too many signatures");
       }
 
       byte[] hash = getTransactionId().getBytes();
 
       try {
-        if (!validateSignature(null, this.transaction, hash, accountStore, dynamicPropertiesStore)) {
+        if (!validateSignature(ownerAddress, this.transaction, hash, accountStore, dynamicPropertiesStore)) {
           isVerified = false;
           throw new ValidateSignatureException("sig error");
         }
@@ -678,17 +677,17 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
   /**
    * validate signature
    */
-  public boolean validateSignature(AccountStore accountStore,
+  public boolean validateSignature(byte[] ownerAddress, AccountStore accountStore,
       DynamicPropertiesStore dynamicPropertiesStore) throws ValidateSignatureException {
     if (!isVerified) {
       //Do not support multi contracts in one transaction
       Transaction.Contract contract = this.getInstance().getRawData().getContract(0);
       if (contract.getType() != ContractType.ShieldedTransferContract) {
-        validatePubSignature(accountStore, dynamicPropertiesStore);
+        validatePubSignature(ownerAddress, accountStore, dynamicPropertiesStore);
       } else {  //ShieldedTransfer
         byte[] owner = getOwnerAddress();
         if (!ArrayUtils.isEmpty(owner)) { //transfer from transparent address
-          validatePubSignature(accountStore, dynamicPropertiesStore);
+          validatePubSignature(ownerAddress, accountStore, dynamicPropertiesStore);
         } else { //transfer from shielded address
           if (this.transaction.getSignatureCount() > 0) {
             throw new ValidateSignatureException("there should be no signatures signed by "
@@ -885,18 +884,5 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
           "Transaction expiration time is %d, but next slot time is %d",
           getExpiration(), nextSlotTime));
     }
-  }
-
-  public boolean retCountIsGreatThanContractCount() {
-    int contractCount = getContractCount();
-    return getRetCount() > contractCount && contractCount > 0;
-  }
-
-  public int getRetCount() {
-    return this.getInstance().getRetCount();
-  }
-
-  public int getContractCount() {
-    return this.getInstance().getRawData().getContractCount();
   }
 }

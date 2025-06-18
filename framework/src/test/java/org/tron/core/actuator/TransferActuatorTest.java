@@ -2,28 +2,14 @@ package org.tron.core.actuator;
 
 import static junit.framework.TestCase.fail;
 import static org.tron.common.utils.PublicMethod.getAddressByteByPrivateKey;
-import static org.tron.core.capsule.TransactionCapsule.checkWeight;
-import static org.tron.core.capsule.TransactionCapsule.getOwner;
-import static org.tron.core.capsule.TransactionCapsule.validateSignature;
 import static org.tron.core.config.Parameter.ChainConstant.TRANSFER_FEE;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
-import java.security.SignatureException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Assert;
@@ -34,7 +20,6 @@ import org.tron.common.BaseTest;
 import org.tron.common.parameter.CommonParameter;
 import org.tron.common.runtime.TvmTestUtils;
 import org.tron.common.utils.ByteArray;
-import org.tron.common.utils.LocalWitnesses;
 import org.tron.common.utils.PublicMethod;
 import org.tron.core.Constant;
 import org.tron.core.Wallet;
@@ -131,64 +116,9 @@ public class TransferActuatorTest extends BaseTest {
             .setAmount(count)
             .build());
   }
-  @Ignore
-  @Test
-  public void rightTransfer() {
-    TransferActuator actuator = new TransferActuator();
-    actuator.setChainBaseManager(dbManager.getChainBaseManager());
-    Random random = new Random();
-    for (int i = 0; i < 10000000; i++) {
-      int randomNumber = random.nextInt(100);
-      actuator.setAny(getContract(randomNumber));
-      TransactionResultCapsule ret = new TransactionResultCapsule();
-      try {
-//        actuator.validate();
-        long start = System.nanoTime();
-        actuator.execute(ret);
-        long end = System.nanoTime();
-        System.out.println("耗时: " + (end - start) / 1000 + " μs");
-//        Assert.assertEquals(ret.getInstance().getRet(), code.SUCESS);
-//        AccountCapsule owner =
-//            dbManager.getAccountStore().get(ByteArray.fromHexString(OWNER_ADDRESS));
-//        AccountCapsule toAccount =
-//            dbManager.getAccountStore().get(ByteArray.fromHexString(TO_ADDRESS));
-
-//        Assert.assertEquals(owner.getBalance(), OWNER_BALANCE - AMOUNT - TRANSFER_FEE);
-//        Assert.assertEquals(toAccount.getBalance(), TO_BALANCE + AMOUNT);
-//        Assert.assertTrue(true);
-      } catch (ContractExeException e) {
-        System.out.println("e:" + e.getMessage());
-//        Assert.assertFalse(e instanceof ContractExeException);
-      }
-    }
-  }
-
-//  @Test
-//  public void test() throws PermissionException, SignatureException, SignatureFormatException {
-//    for (int i = 0; i < 100_0000; i++) {
-//      String randomPrivateKey = PublicMethod.getRandomPrivateKey();
-//      byte[] privateKey = ByteArray.fromHexString(randomPrivateKey);
-//      byte[] ownerAddress = getAddressByteByPrivateKey(randomPrivateKey);
-//      TransferContract transferContract = TransferContract.newBuilder()
-//          .setAmount(1)
-//          .setOwnerAddress(ByteString.copyFrom(ownerAddress))
-//          .setToAddress(ByteString.copyFrom(ByteArray.fromHexString(TO_ADDRESS)))
-//          .build();
-//
-//      TransactionCapsule transactionCapsule = new TransactionCapsule(transferContract, Protocol.Transaction.Contract.ContractType.TransferContract);
-//      transactionCapsule.sign(privateKey);
-//      Protocol.Transaction transaction = transactionCapsule.getInstance();
-//      byte[] hash = transactionCapsule.getTransactionId().getBytes();
-//      long s = System.nanoTime();
-//      validateSignature(ownerAddress, transaction, hash, null, null);
-//      long e = System.nanoTime();
-//      System.out.println("耗时: " + (e - s) / 1000 + " μs");
-//    }
-//  }
-
   @Test
   public void testParallelSignatureValidation() throws Exception {
-    int txCount = 1000;
+    int txCount = 1;
     List<TransactionCapsule> transactions = new ArrayList<>(txCount);
 //    List<byte[]> privateKeys = new ArrayList<>(txCount);
     List<byte[]> ownerAddresses = new ArrayList<>(txCount);
@@ -215,7 +145,62 @@ public class TransferActuatorTest extends BaseTest {
       ownerAddresses.add(ownerAddress);
       hashes.add(txCapsule.getTransactionId().getBytes());
     }
-    dbManager.preValidateTransactionSign(transactions);
+    dbManager.preValidateTransactionSign(ownerAddresses, transactions);
+  }
+
+//  @Test
+//  public void test() throws PermissionException, SignatureException, SignatureFormatException {
+//    for (int i = 0; i < 100_0000; i++) {
+//      String randomPrivateKey = PublicMethod.getRandomPrivateKey();
+//      byte[] privateKey = ByteArray.fromHexString(randomPrivateKey);
+//      byte[] ownerAddress = getAddressByteByPrivateKey(randomPrivateKey);
+//      TransferContract transferContract = TransferContract.newBuilder()
+//          .setAmount(1)
+//          .setOwnerAddress(ByteString.copyFrom(ownerAddress))
+//          .setToAddress(ByteString.copyFrom(ByteArray.fromHexString(TO_ADDRESS)))
+//          .build();
+//
+//      TransactionCapsule transactionCapsule = new TransactionCapsule(transferContract, Protocol.Transaction.Contract.ContractType.TransferContract);
+//      transactionCapsule.sign(privateKey);
+//      Protocol.Transaction transaction = transactionCapsule.getInstance();
+//      byte[] hash = transactionCapsule.getTransactionId().getBytes();
+//      long s = System.nanoTime();
+//      validateSignature(ownerAddress, transaction, hash, null, null);
+//      long e = System.nanoTime();
+//      System.out.println("耗时: " + (e - s) / 1000 + " μs");
+//    }
+//  }
+
+//  @Test
+//  public void testParallelSignatureValidation() throws Exception {
+//    int txCount = 1000;
+//    List<TransactionCapsule> transactions = new ArrayList<>(txCount);
+////    List<byte[]> privateKeys = new ArrayList<>(txCount);
+//    List<byte[]> ownerAddresses = new ArrayList<>(txCount);
+//    List<byte[]> hashes = new ArrayList<>(txCount);
+//
+//    // 1. 串行构造交易
+//    for (int i = 0; i < txCount; i++) {
+//      String randomPrivateKey = PublicMethod.getRandomPrivateKey();
+//      byte[] privateKey = ByteArray.fromHexString(randomPrivateKey);
+//      byte[] ownerAddress = getAddressByteByPrivateKey(randomPrivateKey);
+//
+//      TransferContract transferContract = TransferContract.newBuilder()
+//          .setAmount(1)
+//          .setOwnerAddress(ByteString.copyFrom(ownerAddress))
+//          .setToAddress(ByteString.copyFrom(ByteArray.fromHexString(TO_ADDRESS)))
+//          .build();
+//
+//      TransactionCapsule txCapsule = new TransactionCapsule(
+//          transferContract, Protocol.Transaction.Contract.ContractType.TransferContract);
+//      txCapsule.sign(privateKey);
+//
+//      transactions.add(txCapsule);
+////      privateKeys.add(privateKey);
+//      ownerAddresses.add(ownerAddress);
+//      hashes.add(txCapsule.getTransactionId().getBytes());
+//    }
+//    dbManager.preValidateTransactionSign(ownerAddresses, transactions);
 
     // 2. 并行验签
 //    int threadCount = Runtime.getRuntime().availableProcessors();
@@ -248,7 +233,7 @@ public class TransferActuatorTest extends BaseTest {
 //    long e = System.nanoTime();
 //    System.out.println("耗时: " + (e - s) / 1000 + " μs");
 //    executor.shutdown();
-  }
+//  }
 
   @Ignore
   @Test

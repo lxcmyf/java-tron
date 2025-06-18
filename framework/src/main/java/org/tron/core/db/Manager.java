@@ -877,7 +877,7 @@ public class Manager {
     Metrics.gaugeInc(MetricKeys.Gauge.MANAGER_QUEUE, 1,
         MetricLabels.Gauge.QUEUE_QUEUED);
     try {
-      if (!trx.validateSignature(chainBaseManager.getAccountStore(),
+      if (!trx.validateSignature(null, chainBaseManager.getAccountStore(),
           chainBaseManager.getDynamicPropertiesStore())) {
         throw new ValidateSignatureException(String.format("trans sig validate failed, id: %s",
             trx.getTransactionId()));
@@ -1492,7 +1492,7 @@ public class Manager {
 
     validateDup(trxCap);
 
-    if (!trxCap.validateSignature(chainBaseManager.getAccountStore(),
+    if (!trxCap.validateSignature(null, chainBaseManager.getAccountStore(),
         chainBaseManager.getDynamicPropertiesStore())) {
       throw new ValidateSignatureException(
           String.format(" %s transaction signature validate failed", txId));
@@ -1788,7 +1788,7 @@ public class Manager {
     //parallel check sign
     if (!block.generatedByMyself) {
       try {
-        preValidateTransactionSign(txs);
+        preValidateTransactionSign(null, txs);
       } catch (InterruptedException e) {
         logger.error("Parallel check sign interrupted exception! block info: {}.", block, e);
         Thread.currentThread().interrupt();
@@ -1803,12 +1803,6 @@ public class Manager {
       List<TransactionInfo> results = new ArrayList<>();
       long num = block.getNum();
       for (TransactionCapsule transactionCapsule : block.getTransactions()) {
-        if (chainBaseManager.getDynamicPropertiesStore().allowConsensusLogicOptimization()
-            && transactionCapsule.retCountIsGreatThanContractCount()) {
-          throw new BadBlockException(String.format("The result count %d of this transaction %s is "
-                  + "greater than its contract count %d", transactionCapsule.getRetCount(),
-              transactionCapsule.getTransactionId(), transactionCapsule.getContractCount()));
-        }
         transactionCapsule.setBlockNum(num);
         if (block.generatedByMyself) {
           transactionCapsule.setVerified(true);
@@ -2018,7 +2012,7 @@ public class Manager {
         > maxTransactionPendingSize;
   }
 
-  public void preValidateTransactionSign(List<TransactionCapsule> txs)
+  public void preValidateTransactionSign(List<byte[]> list, List<TransactionCapsule> txs)
       throws InterruptedException, ValidateSignatureException {
     int transSize = txs.size();
     if (transSize <= 0) {
@@ -2030,12 +2024,16 @@ public class Manager {
       final long s = System.nanoTime();
       CountDownLatch countDownLatch = new CountDownLatch(transSize);
       List<Future<Boolean>> futures = new ArrayList<>(transSize);
-
-      for (TransactionCapsule transaction : txs) {
+      for (int i = 0; i < txs.size(); i++) {
         Future<Boolean> future = validateSignService
-            .submit(new ValidateSignTask(transaction, countDownLatch, chainBaseManager));
+            .submit(new ValidateSignTask(list.get(i), txs.get(i), countDownLatch, chainBaseManager));
         futures.add(future);
       }
+//      for (TransactionCapsule transaction : txs) {
+//        Future<Boolean> future = validateSignService
+//            .submit(new ValidateSignTask(transaction, countDownLatch, chainBaseManager));
+//        futures.add(future);
+//      }
       countDownLatch.await();
 
       for (Future<Boolean> future : futures) {
@@ -2509,18 +2507,20 @@ public class Manager {
     private TransactionCapsule trx;
     private CountDownLatch countDownLatch;
     private ChainBaseManager manager;
+    private byte[] address;
 
-    ValidateSignTask(TransactionCapsule trx, CountDownLatch countDownLatch,
+    ValidateSignTask(byte[] address, TransactionCapsule trx, CountDownLatch countDownLatch,
         ChainBaseManager manager) {
       this.trx = trx;
       this.countDownLatch = countDownLatch;
       this.manager = manager;
+      this.address = address;
     }
 
     @Override
     public Boolean call() throws ValidateSignatureException {
       try {
-        trx.validateSignature(null, null);
+        trx.validateSignature(address,null, null);
       } catch (ValidateSignatureException e) {
         throw e;
       } finally {
