@@ -251,9 +251,9 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
             ByteArray.toHexString(sig.toByteArray()) + " is signed by " + encode58Check(address)
                 + " but it is not contained of permission.");
       }
-      if (ForkController.instance().pass(Parameter.ForkBlockVersionEnum.VERSION_4_7_1)) {
+//      if (ForkController.instance().pass(Parameter.ForkBlockVersionEnum.VERSION_4_7_1)) {
         base64 = encode58Check(address);
-      }
+//      }
       if (addMap.containsKey(base64)) {
         throw new PermissionException(encode58Check(address) + " has signed twice!");
       }
