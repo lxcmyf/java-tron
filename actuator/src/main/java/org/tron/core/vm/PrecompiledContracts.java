@@ -1458,7 +1458,7 @@ public class PrecompiledContracts {
         }
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
-        logger.info("VerifyTransferProof exception: " + e.getMessage());
+        logger.info("VerifyTransferProof exception: " + e.getMessage());// todo1 不能有exception关键字 除非影响接口返回
       } catch (Throwable any) {
         String errorMsg = any.getMessage();
         if (errorMsg == null && any.getCause() != null) {

@@ -167,7 +167,7 @@ public final class VMUtils {
     try {
       if (balance < amount) {
         throw new ContractValidateException(
-            "Validate InternalTransfer error, balance is not sufficient.");
+            "Validate InternalTransfer error, balance is not sufficient."); //TODO 21
       }
 
       addExact(toAccount.getBalance(), amount, VMConfig.disableJavaLangMath());

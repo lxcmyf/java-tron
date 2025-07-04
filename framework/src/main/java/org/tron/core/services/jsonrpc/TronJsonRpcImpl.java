@@ -473,7 +473,7 @@ public class TronJsonRpcImpl implements TronJsonRpc, Closeable {
       }
       result = ByteArray.toJsonHex(listBytes);
     } else {
-      logger.error("trigger contract failed.");
+      logger.error("trigger contract failed.");// todo2 不明确打印原因
       String errMsg = retBuilder.getMessage().toStringUtf8();
       byte[] resData = trxExtBuilder.getConstantResult(0).toByteArray();
       if (resData.length > 4 && Hex.toHexString(resData).startsWith(ERROR_SELECTOR)) {

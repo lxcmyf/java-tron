@@ -1252,7 +1252,7 @@ public class Manager {
         logger.info("Block num: {}, re-push-size: {}, pending-size: {}, "
                         + "block-tx-size: {}, verify-tx-size: {}",
                 block.getNum(), rePushTransactions.size(), pendingTransactions.size(),
-                block.getTransactions().size(), txs.size());
+                block.getTransactions().size(), txs.size());// todo 27
 
         if (CommonParameter.getInstance().getShutdownBlockTime() != null
                 && CommonParameter.getInstance().getShutdownBlockTime()
@@ -1923,7 +1923,7 @@ public class Manager {
         EventPluginLoader.getInstance().postSolidityLogTrigger(triggerCapsule);
       } else {
         // when switch fork, block will be post to triggerCapsuleQueue, transaction may be not found
-        logger.error("PostSolidityLogContractTrigger txId = {} not contains transaction.",
+        logger.error("PostSolidityLogContractTrigger txId = {} not contains transaction.", // TODO 18
             triggerCapsule.getTransactionId());
       }
     }
@@ -2064,7 +2064,7 @@ public class Manager {
     } catch (TaposException e) {
       logger.debug("Pending manager: tapos exception", e);
     } catch (TooBigTransactionException e) {
-      logger.debug("Pending manager: too big transaction", e);
+      logger.debug("Pending manager: too big transaction", e);// TODO 23
     } catch (TransactionExpirationException e) {
       logger.debug("Pending manager: expiration transaction", e);
     } catch (ReceiptCheckErrException e) {

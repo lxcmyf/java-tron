@@ -606,7 +606,7 @@ public class Wallet {
           .setMessage(ByteString.copyFromUtf8("Transaction expired"))
           .build();
     } catch (Exception e) {
-      logger.warn("Broadcast transaction {} failed", txID, e);
+      logger.warn("Broadcast transaction {} failed", txID, e);// todo10  日志级别
       return builder.setResult(false).setCode(response_code.OTHER_ERROR)
           .setMessage(ByteString.copyFromUtf8("Error: " + e.getMessage()))
           .build();
@@ -4368,7 +4368,7 @@ public class Wallet {
 
       return energyFee;
     } catch (Exception e) {
-      logger.error("GetEnergyFee timestamp={} failed", timestamp, e);
+      logger.error("GetEnergyFee timestamp={} failed", timestamp, e);// todo7 error is Closed 啥意思
       return getEnergyFee();
     }
   }

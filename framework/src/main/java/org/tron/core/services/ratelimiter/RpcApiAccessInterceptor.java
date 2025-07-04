@@ -46,7 +46,7 @@ public class RpcApiAccessInterceptor implements ServerInterceptor {
         disabled = disabledApiList.contains(endpoint.split("/")[1].toLowerCase());
       }
     } catch (Exception e) {
-      logger.error("check isDisabled except, endpoint={}, error is {}", endpoint, e.getMessage());
+      logger.error("check isDisabled except, endpoint={}, error is {}", endpoint, e.getMessage());// todo 12 不明确啥意思
     }
 
     return disabled;

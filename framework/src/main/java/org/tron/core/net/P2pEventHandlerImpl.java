@@ -276,7 +276,7 @@ public class P2pEventHandlerImpl extends P2pEventHandler {
       }
       if (type.equals(P2pException.TypeEnum.BAD_MESSAGE)) {
         logger.error("Message from {} process failed, {} \n type: ({})",
-            peer.getInetSocketAddress(), msg, type, ex);
+            peer.getInetSocketAddress(), msg, type, ex);// TODO 24
       } else {
         logger.warn("Message from {} process failed, {} \n type: ({}), detail: {}",
             peer.getInetSocketAddress(), msg, type, ex.getMessage());

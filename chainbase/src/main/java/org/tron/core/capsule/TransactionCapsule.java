@@ -356,7 +356,8 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
           + "input parameters", invalidProtocolBufferException.getMessage());
       return new byte[0];
     } catch (Exception ex) {
-      logger.error(ex.getMessage());
+      logger.error(ex.getMessage());// todo9
+//      logger.error(e.getMessage(), e);
       return new byte[0];
     }
   }
