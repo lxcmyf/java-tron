@@ -4,6 +4,7 @@ import static org.tron.common.utils.Commons.decodeFromBase58Check;
 import static org.tron.common.utils.client.Parameter.CommonConstant.ADD_PRE_FIX_BYTE_MAINNET;
 
 import com.google.protobuf.ByteString;
+import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -31,10 +32,11 @@ public class DelegationServiceTest {
   }
 
   public static void testGrpc() {
+    ManagedChannel channel = ManagedChannelBuilder.forTarget(fullnode)
+        .usePlaintext()
+        .build();
     WalletBlockingStub walletStub = WalletGrpc
-        .newBlockingStub(ManagedChannelBuilder.forTarget(fullnode)
-            .usePlaintext()
-            .build());
+        .newBlockingStub(channel);
     BytesMessage.Builder builder = BytesMessage.newBuilder();
     builder.setValue(ByteString.copyFromUtf8("TLTDZBcPoJ8tZ6TTEeEqEvwYFk2wgotSfD"));
     System.out
@@ -47,6 +49,7 @@ public class DelegationServiceTest {
     TransactionExtention transactionExtention = walletStub
         .updateBrokerage(updateBrokerageContract.build());
     System.out.println("UpdateBrokerage: " + transactionExtention);
+    channel.shutdown();
   }
 
   private void testPay(int cycle) {

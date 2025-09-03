@@ -4,6 +4,7 @@ import static org.tron.common.utils.client.WalletClient.decodeFromBase58Check;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import org.tron.api.GrpcAPI.TransactionExtention;
 import org.tron.api.WalletGrpc;
@@ -22,8 +23,9 @@ public class CreateCommonTransactionTest {
    * for example create UpdateBrokerageContract
    */
   public static void testCreateUpdateBrokerageContract() {
+    ManagedChannel channel = ManagedChannelBuilder.forTarget(FULL_NODE).usePlaintext().build();
     WalletBlockingStub walletStub = WalletGrpc
-        .newBlockingStub(ManagedChannelBuilder.forTarget(FULL_NODE).usePlaintext().build());
+        .newBlockingStub(channel);
     UpdateBrokerageContract.Builder updateBrokerageContract = UpdateBrokerageContract.newBuilder();
     updateBrokerageContract.setOwnerAddress(
         ByteString.copyFrom(decodeFromBase58Check("TN3zfjYUmMFK3ZsHSsrdJoNRtGkQmZLBLz")))
@@ -38,6 +40,7 @@ public class CreateCommonTransactionTest {
     TransactionExtention transactionExtention = walletStub
         .createCommonTransaction(transaction.build());
     System.out.println("Common UpdateBrokerage: " + transactionExtention);
+    channel.shutdown();
   }
 
   public static void main(String[] args) {

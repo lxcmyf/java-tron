@@ -1,5 +1,6 @@
 package org.tron.core.services;
 
+import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
@@ -45,12 +46,14 @@ public class WalletApiTest {
   public void listNodesTest() {
     String fullNode = String.format("%s:%d", "127.0.0.1",
         Args.getInstance().getRpcPort());
+    ManagedChannel channel = ManagedChannelBuilder.forTarget(fullNode)
+        .usePlaintext()
+        .build();
     WalletGrpc.WalletBlockingStub walletStub = WalletGrpc
-        .newBlockingStub(ManagedChannelBuilder.forTarget(fullNode)
-            .usePlaintext()
-            .build());
+        .newBlockingStub(channel);
     Assert.assertTrue(walletStub.listNodes(EmptyMessage.getDefaultInstance())
         .getNodesList().isEmpty());
+    channel.shutdown();
   }
 
   @After
