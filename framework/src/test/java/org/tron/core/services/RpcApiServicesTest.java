@@ -186,13 +186,31 @@ public class RpcApiServicesTest {
     context.close();
     Args.clearParam();
 
-    ((ManagedChannel) blockingStubFull.getChannel()).shutdown();
-    ((ManagedChannel) blockingStubSolidity.getChannel()).shutdown();
-    ((ManagedChannel) blockingStubPBFT.getChannel()).shutdown();
+    ManagedChannel channel1 = (ManagedChannel) blockingStubFull.getChannel();
+    if (channel1 != null) {
+      channel1.shutdown();
+    }
+    ManagedChannel channel2 = (ManagedChannel) blockingStubSolidity.getChannel();
+    if (channel2 != null) {
+      channel2.shutdown();
+    }
+    ManagedChannel channel3 = (ManagedChannel) blockingStubPBFT.getChannel();
+    if (channel3 != null) {
+      channel3.shutdown();
+    }
 
-    ((ManagedChannel) databaseBlockingStubFull.getChannel()).shutdown();
-    ((ManagedChannel) databaseBlockingStubSolidity.getChannel()).shutdown();
-    ((ManagedChannel) databaseBlockingStubPBFT.getChannel()).shutdown();
+    ManagedChannel channel4 = (ManagedChannel) databaseBlockingStubFull.getChannel();
+    if (channel4 != null) {
+      channel4.shutdown();
+    }
+    ManagedChannel channel5 = (ManagedChannel) databaseBlockingStubSolidity.getChannel();
+    if (channel5 != null) {
+      channel5.shutdown();
+    }
+    ManagedChannel channel6 = (ManagedChannel) databaseBlockingStubPBFT.getChannel();
+    if (channel6 != null) {
+      channel6.shutdown();
+    }
   }
 
   @Test

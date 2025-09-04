@@ -40,7 +40,9 @@ public class CreateCommonTransactionTest {
     TransactionExtention transactionExtention = walletStub
         .createCommonTransaction(transaction.build());
     System.out.println("Common UpdateBrokerage: " + transactionExtention);
-    channel.shutdown();
+    if (channel != null) {
+      channel.shutdown();
+    }
   }
 
   public static void main(String[] args) {

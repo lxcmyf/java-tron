@@ -95,9 +95,18 @@ public class RpcApiAccessInterceptorTest {
   public static void destroy() {
     context.close();
     Args.clearParam();
-    ((ManagedChannel) blockingStubFull.getChannel()).shutdown();
-    ((ManagedChannel) blockingStubSolidity.getChannel()).shutdown();
-    ((ManagedChannel) blockingStubPBFT.getChannel()).shutdown();
+    ManagedChannel channel1 = (ManagedChannel) blockingStubFull.getChannel();
+    if (channel1 != null) {
+      channel1.shutdown();
+    }
+    ManagedChannel channel2 = (ManagedChannel) blockingStubSolidity.getChannel();
+    if (channel2 != null) {
+      channel2.shutdown();
+    }
+    ManagedChannel channel3 = (ManagedChannel) blockingStubPBFT.getChannel();
+    if (channel3 != null) {
+      channel3.shutdown();
+    }
   }
 
   @Test

@@ -53,7 +53,9 @@ public class WalletApiTest {
         .newBlockingStub(channel);
     Assert.assertTrue(walletStub.listNodes(EmptyMessage.getDefaultInstance())
         .getNodesList().isEmpty());
-    channel.shutdown();
+    if (channel != null) {
+      channel.shutdown();
+    }
   }
 
   @After

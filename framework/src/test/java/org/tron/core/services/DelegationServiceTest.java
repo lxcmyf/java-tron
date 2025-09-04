@@ -49,7 +49,9 @@ public class DelegationServiceTest {
     TransactionExtention transactionExtention = walletStub
         .updateBrokerage(updateBrokerageContract.build());
     System.out.println("UpdateBrokerage: " + transactionExtention);
-    channel.shutdown();
+    if (channel != null) {
+      channel.shutdown();
+    }
   }
 
   private void testPay(int cycle) {
