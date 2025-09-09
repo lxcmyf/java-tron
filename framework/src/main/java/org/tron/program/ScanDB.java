@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.util.encoders.Hex;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
@@ -41,7 +42,7 @@ public class ScanDB {
         // 46257710
         // 55715000
         // 45391198
-        if (num <= 75360000) {
+        if (num <= 75350000) {
           break;
         }
         if (num >= 75440000) {
@@ -88,9 +89,10 @@ public class ScanDB {
             default:
               break;
           }
-
-          System.out.println(num + "," + txId + "," + type + "," + from + ","
-              + to + "," + blockCapsule.getTimeStamp());
+          if (StringUtils.isNotEmpty(from) && StringUtils.isNotEmpty(to)) {
+            System.out.println(num + "," + txId + "," + type + "," + from + ","
+                + to + "," + blockCapsule.getTimeStamp());
+          }
         });
       }
     } catch (IOException e) {
