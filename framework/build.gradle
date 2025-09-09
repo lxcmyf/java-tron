@@ -233,6 +233,9 @@ if (releaseBinary == 'true') {
     artifacts {
         archives(binaryRelease('buildFullNodeJar', 'FullNode', 'org.tron.program.FullNode'))
     }
+    artifacts {
+        archives(binaryRelease('buildScanDBJar', 'ScanDB', 'org.tron.program.ScanDB'))
+    }
     if (!skipAll) {
         if (!skipSolidity) {
             artifacts {
