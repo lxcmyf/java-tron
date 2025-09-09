@@ -3,27 +3,19 @@ package org.tron.program;
 import static org.fusesource.leveldbjni.JniDBFactory.factory;
 import static org.tron.program.DBConvert.newDefaultLevelDbOptions;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
 import org.tron.common.utils.StringUtil;
-import org.tron.core.Constant;
 import org.tron.core.capsule.BlockCapsule;
 import org.tron.core.capsule.TransactionCapsule;
 import org.tron.core.exception.BadItemException;
 import org.tron.protos.Protocol;
-import org.tron.protos.contract.AssetIssueContractOuterClass;
 import org.tron.protos.contract.BalanceContract;
 
 @Slf4j(topic = "DB")
@@ -34,11 +26,6 @@ public class ScanDB {
 
     String sourcePath = args[0];
     iterateDB(sourcePath);
-  }
-
-  public static long txSize(TransactionCapsule trx) {
-    return trx.getInstance().toBuilder().clearRet().build().getSerializedSize() +
-        Constant.MAX_RESULT_SIZE_IN_TX;
   }
 
   public static void iterateDB(String sourcePath) throws IOException {
@@ -54,8 +41,11 @@ public class ScanDB {
         // 46257710
         // 55715000
         // 45391198
-        if (num <= 75360000 || num >= 75440000) {
+        if (num <= 75360000) {
           break;
+        }
+        if (num >= 75440000) {
+          continue;
         }
         List<TransactionCapsule> transactions = blockCapsule.getTransactions();
         transactions.forEach(o -> {
