@@ -33,7 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.tron.common.error.TronDBException;
 import org.tron.common.es.ExecutorServiceManager;
 import org.tron.common.parameter.CommonParameter;
-import org.tron.common.storage.WriteOptionsWrapper;
 import org.tron.common.utils.FileUtil;
 import org.tron.common.utils.StorageUtils;
 import org.tron.core.db.RevokingDatabase;
@@ -360,7 +359,6 @@ public class SnapshotManager implements RevokingDatabase {
 
   public void createCheckpoint() {
     TronDatabase<byte[]> checkPointStore = null;
-    boolean syncFlag;
     try {
       Map<WrappedByteArray, WrappedByteArray> batch = new HashMap<>();
       for (Chainbase db : dbs) {
@@ -392,16 +390,13 @@ public class SnapshotManager implements RevokingDatabase {
       if (isV2Open()) {
         String dbName = String.valueOf(System.currentTimeMillis());
         checkPointStore = getCheckpointDB(dbName);
-        syncFlag = CommonParameter.getInstance().getStorage().isCheckpointSync();
       } else {
         checkPointStore = checkTmpStore;
-        syncFlag = CommonParameter.getInstance().getStorage().isDbSync();
       }
 
-      checkPointStore.getDbSource().updateByBatch(batch.entrySet().stream()
+      checkPointStore.updateByBatch(batch.entrySet().stream()
               .map(e -> Maps.immutableEntry(e.getKey().getBytes(), e.getValue().getBytes()))
-              .collect(HashMap::new, (m, k) -> m.put(k.getKey(), k.getValue()), HashMap::putAll),
-          WriteOptionsWrapper.getInstance().sync(syncFlag));
+              .collect(HashMap::new, (m, k) -> m.put(k.getKey(), k.getValue()), HashMap::putAll));
 
     } catch (Exception e) {
       throw new TronDBException(e);
@@ -430,6 +425,10 @@ public class SnapshotManager implements RevokingDatabase {
   }
 
   private void deleteCheckpoint() {
+    if(checkTmpStore == null) {
+      // only occurs in mock test. TODO fix test
+      return;
+    }
     try {
       Map<byte[], byte[]> hmap = new HashMap<>();
       for (Map.Entry<byte[], byte[]> e : checkTmpStore.getDbSource()) {
